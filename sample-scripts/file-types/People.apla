@@ -1,0 +1,7 @@
+⍝ .apla: array notation. ( … ) is a list (vector), [ … ] would be a matrix.
+⍝ Each (name: … ⋄ age: …) is a namespace with those variables.
+(
+  (name:'Ann' ⋄ age:31 ⋄ city:'London')
+  (name:'Bob' ⋄ age:25 ⋄ city:'Paris')
+  (name:'Cy'  ⋄ age:40 ⋄ city:'Rome')
+)

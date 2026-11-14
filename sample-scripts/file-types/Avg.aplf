@@ -1,0 +1,5 @@
+ Avg←{
+     ⍝ .aplf: one function. Average of a numeric vector.
+     ⍝   Avg 3 1 4 1 5   →   2.8
+     (+/⍵)÷≢⍵
+ }

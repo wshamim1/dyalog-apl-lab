@@ -60,10 +60,20 @@ You should get `1 2 3 4 5 6 7 8 9 10` and `5050`.
 Start with [tutorials/](tutorials/README.md). There are 12 short lessons,
 from first steps to control structures, each with exercises.
 
+## Sample scripts
+
+[sample-scripts/](sample-scripts/README.md) has small runnable scripts (primes,
+strings, statistics, Game of Life, a CSV report…):
+
+```sh
+dyalog sample-scripts/08-life.apls
+```
+
 ## Repository layout
 
 ```
 tutorials/    lessons 00–11 with exercises (start here)
+sample-scripts/ runnable .apls scripts: primes, strings, stats, Life, CSV… (dyalog FILE.apls)
 integrations/ connect Dyalog to other systems
   dyalog_ride/  Python client for a live Dyalog session (RIDE protocol)
   streamlit_app/ web UI: plain English → APL with OpenAI, plus a REPL

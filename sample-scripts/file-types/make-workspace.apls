@@ -1,0 +1,10 @@
+⍝ Build demo.dws, a saved workspace (binary), from the source files here.
+⍝ Run:  dyalog sample-scripts/file-types/make-workspace.apls
+⍝ Then: dyalog sample-scripts/file-types/demo.dws
+here←⊃1⎕NPARTS⊃2⎕NQ'.' 'GetCommandLineArgs'
+{}⎕FIX'file://',here,'Stats.apln'
+{}2⎕FIX'file://',here,'Avg.aplf'
+⍝ ⎕LX is the "latent expression": it runs when the workspace is loaded
+⎕LX←'⎕←''demo.dws loaded. Try: Stats.Summary 3 1 4 1 5 9'''
+⎕SAVE here,'demo.dws'
+⎕←'saved ',here,'demo.dws'

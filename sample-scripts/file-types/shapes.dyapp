@@ -1,0 +1,6 @@
+Target #
+Load Shape.apli
+Load Square.aplc
+Load Circle.aplc
+Run ⎕←'Loaded the Shape interface, then the Square and Circle classes'
+Run ⎕←↑{⍵.Name,': area ',⍕⍵.Area}¨(⎕NEW Square 3)(⎕NEW Circle 1)

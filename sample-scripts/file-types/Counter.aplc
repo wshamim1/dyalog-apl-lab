@@ -1,0 +1,27 @@
+:Class Counter
+⍝ .aplc: a self-contained class (no interface needed), so it can be
+⍝ loaded on its own:  dyalog Counter.aplc
+⍝   c←⎕NEW Counter ⋄ c.Add 5 ⋄ c.Add 2 ⋄ c.Total   →   7
+    :Field Public Total←0
+    :Field Public Shared Created←0      ⍝ one value shared by all Counters
+
+    ∇ make
+      :Access Public
+      :Implements Constructor
+      Created+←1
+    ∇
+
+    ∇ Add n
+      :Access Public
+      Total+←n
+    ∇
+
+    ∇ Run
+    ⍝ A public shared Run is called when the file is loaded at startup
+      :Access Public Shared
+      c←⎕NEW ⎕THIS                       ⍝ inside a shared method, ⎕THIS is the class
+      c.Add¨3 4 5
+      ⎕←'Counter demo: added 3 4 5, total = ',⍕c.Total
+      ⎕←'Counters created so far: ',⍕Created
+    ∇
+:EndClass

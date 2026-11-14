@@ -1,0 +1,7 @@
+Target #
+Load Stats.apln
+Load Avg.aplf
+Load Twice.aplo
+Run ⎕←'demo.dyapp loaded Stats, Avg and Twice'
+Run ⎕←'Avg 3 1 4 1 5 = ',⍕Avg 3 1 4 1 5
+Run ⎕←'Stats.Range 3 9 4 = ',⍕Stats.Range 3 9 4

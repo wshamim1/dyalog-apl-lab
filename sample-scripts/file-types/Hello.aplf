@@ -1,0 +1,5 @@
+ Hello
+⍝ .aplf: a traditional function with no arguments.
+⍝ `dyalog Hello.aplf` loads it and, because it takes no arguments, runs it.
+ ⎕←'Hello from a function file!'
+ ⎕←'Today is ',⍕3↑⎕TS

@@ -1,0 +1,20 @@
+⍝ Helper for `dyalog FILE.apla`: read an array-notation file and display it.
+⍝ Usage (inside the container): dyalogscript show-apla.apls /app/Grid.apla
+⍝ In array notation a line break means the same as ⋄, so joining the lines
+⍝ with ⋄ and evaluating gives the array.
+args←2⎕NQ'.' 'GetCommandLineArgs'
+:If 2>≢args ⋄ ⎕←'usage: show-apla.apls FILE.apla' ⋄ ⎕OFF 2 ⋄ :EndIf
+file←2⊃args
+⍝ Drop ⍝ comments (but not a ⍝ inside quotes) and blank lines first,
+⍝ otherwise one comment would swallow the rest of the joined text.
+NoComment←{(∧\~(⍵='⍝')>≠\⍵='''')/⍵}
+lines←NoComment¨⊃⎕NGET file 1
+lines←(∨/¨' '≠lines)/lines
+a←⍎¯3↓∊lines,¨⊂' ⋄ '
+⎕←file,': rank ',(⍕≢⍴a),', shape ',(⍕⍴a),', depth ',⍕≡a
+⎕←a
+⍝ Namespaces only display as #.[Namespace], so also show their contents
+:If ∨/'#.[Namespace]'⍷∊⍕a
+    ⎕←'as JSON:'
+    ⎕←1(⎕JSON⍠('HighRank' 'Split')('Compact' 0))a
+:EndIf

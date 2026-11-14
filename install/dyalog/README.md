@@ -38,7 +38,13 @@ dyalog pull                        # update the image
 | File | What it contains | `dyalog FILE` does |
 | --- | --- | --- |
 | `.apls` | **script**: statements, run top to bottom | runs it with `dyalogscript`, then exits with its exit code (0 = OK, 4 = APL error, or `⎕OFF n`) |
-| `.aplf` | **one function** (dfn or tradfn) | opens a session with it loaded. A function that takes no arguments runs right away. |
+| `.aplf` / `.aplo` | **one function / operator** | opens a session with it loaded. A function that takes no arguments runs right away. |
+| `.apln` / `.aplc` / `.apli` | **namespace / class / interface** | opens a session with it loaded. A namespace's or class's `Run` is called. |
+| `.apla` | **array** in array notation | displays the array (namespaces also as JSON), then exits |
+| `.dws` | saved **workspace** (binary) | opens it and runs its `⎕LX` |
+| `.dyapp` | **app definition** (`Load …` / `Run …` lines) | boots it: loads the files in order, runs the `Run` lines |
+
+Examples of every type: [sample-scripts/file-types](../../sample-scripts/file-types/README.md).
 
 **In a script, only `⎕←` lines print.** A bare expression is evaluated but not
 shown, unlike in the interactive session:

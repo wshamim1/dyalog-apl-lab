@@ -7,6 +7,10 @@
 #   dyalog FILE.apls       run an APL script (top to bottom), then exit
 #   dyalog FILE.aplf       start a session with that function loaded
 #                          (a function without arguments runs straight away)
+#                          same for .aplo .apln .aplc .apli .dyalog
+#   dyalog FILE.apla       display the array in an array-notation file
+#   dyalog FILE.dws        open a saved workspace (runs its ⎕LX)
+#   dyalog FILE.dyapp      start an app definition (Load …/Run … lines)
 #   dyalog ride            serve RIDE on localhost:4502 (connect RIDE to it)
 #   dyalog pull            update the Dyalog image
 #   dyalog setup           install/start Podman (or Docker) and pull the image
@@ -64,11 +68,19 @@ case "${1:-}" in
   ride)            run "$PWD" ride ;;
   pull)            run "$PWD" pull ;;
   setup|install)   run "$PWD" install ;;
-  -h|--help|help)  sed -n '2,24p' "$src" | sed 's/^# \{0,1\}//' ;;
-  *.apls|*.aplf|*.apln|*.aplc|*.dyalog)
+  -h|--help|help)  sed -n '2,28p' "$src" | sed 's/^# \{0,1\}//' ;;
+  *.apls|*.apla|*.aplf|*.aplo|*.apln|*.aplc|*.apli|*.dyalog|*.dws|*.dyapp)
     place_file "$1"; shift
     case "$INSIDE" in
-      *.apls) run "$MOUNT" script "$INSIDE" "$@" ;;
+      *.apls)  run "$MOUNT" script "$INSIDE" "$@" ;;
+      *.apla)  [ $# -eq 0 ] || die "arguments are only supported for .apls scripts"
+               EXTRA_MOUNT="$HERE:/dyalog-cli:ro" \
+                 run "$MOUNT" script /dyalog-cli/show-apla.apls "$INSIDE" ;;
+      *.dyapp) [ $# -eq 0 ] || die "arguments are only supported for .apls scripts"
+               run "$MOUNT" load "$INSIDE" DYAPP ;;
+      *.dws|*.apln|*.aplc|*.apli|*.dyalog)
+               [ $# -eq 0 ] || die "arguments are only supported for .apls scripts"
+               run "$MOUNT" load "$INSIDE" ;;
       *)      [ $# -eq 0 ] || die "arguments are only supported for .apls scripts"
               # A function file starts with a header (F←{…} or r←F y). If the
               # first real line looks like a statement, it's really a script.
@@ -81,6 +93,6 @@ case "${1:-}" in
               run "$MOUNT" load "$INSIDE" ;;
     esac
     ;;
-  *) [ -f "$1" ] && die "don't know how to run '$1': use .apls for scripts, .aplf for functions"
+  *) [ -f "$1" ] && die "don't know how to run '$1': supported: .apls .apla .aplf .aplo .apln .aplc .apli .dyalog .dws .dyapp"
      die "unknown command '$1' (try: dyalog help)" ;;
 esac

@@ -1,0 +1,21 @@
+:Class Square : ,Shape
+⍝ .aplc: a class. Create objects with ⎕NEW:
+⍝   s←⎕NEW Square 3 ⋄ s.Area   →   9
+    :Field Public Side←1
+
+    ∇ make s
+      :Access Public
+      :Implements Constructor
+      Side←s
+    ∇
+
+    ∇ r←Area
+      :Implements Method Shape.Area
+      r←Side*2
+    ∇
+
+    ∇ r←Name
+      :Implements Method Shape.Name
+      r←'square'
+    ∇
+:EndClass

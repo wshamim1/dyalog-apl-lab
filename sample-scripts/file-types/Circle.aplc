@@ -1,0 +1,20 @@
+:Class Circle : ,Shape
+⍝ .aplc: another class implementing the same Shape interface.
+    :Field Public Radius←1
+
+    ∇ make r
+      :Access Public
+      :Implements Constructor
+      Radius←r
+    ∇
+
+    ∇ r←Area
+      :Implements Method Shape.Area
+      r←○Radius*2              ⍝ ○x is π×x
+    ∇
+
+    ∇ r←Name
+      :Implements Method Shape.Name
+      r←'circle'
+    ∇
+:EndClass

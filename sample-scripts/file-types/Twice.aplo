@@ -1,0 +1,6 @@
+ Twice←{
+     ⍝ .aplo: one operator. Applies the function ⍺⍺ two times.
+     ⍝   (1∘+)Twice 10   →   12
+     ⍝   ⌽Twice 'abc'    →   'abc'
+     ⍺⍺ ⍺⍺ ⍵
+ }

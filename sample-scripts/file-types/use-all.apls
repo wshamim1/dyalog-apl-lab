@@ -1,0 +1,29 @@
+⍝ Load one file of each type and use it. Run:
+⍝   dyalog sample-scripts/file-types/use-all.apls
+here←⊃1⎕NPARTS⊃2⎕NQ'.' 'GetCommandLineArgs'
+Fix←{⎕FIX'file://',here,⍵}               ⍝ .apln .aplc .apli (scripts)
+Fix2←{2⎕FIX'file://',here,⍵}             ⍝ .aplf .aplo (one function/operator)
+⍝ .apla: in array notation a newline means ⋄. Drop comments and blank lines,
+⍝ join the rest with ⋄, then evaluate.
+NoComment←{(∧\~(⍵='⍝')>≠\⍵='''')/⍵}
+Apla←{l←NoComment¨⊃⎕NGET(here,⍵)1 ⋄ ⍎¯3↓∊((∨/¨' '≠l)/l),¨⊂' ⋄ '}
+
+⎕←'── .aplf (function)'
+{}Fix2'Avg.aplf' ⋄ ⎕←'Avg 3 1 4 1 5 = ',⍕Avg 3 1 4 1 5
+
+⎕←'── .aplo (operator)'
+{}Fix2'Twice.aplo' ⋄ ⎕←'(1∘+)Twice 10 = ',⍕(1∘+)Twice 10
+
+⎕←'── .apln (namespace)'
+{}Fix'Stats.apln' ⋄ ⎕←Stats.Summary 3 1 4 1 5 9
+
+⎕←'── .apli + .aplc (interface and classes)'
+{}Fix¨'Shape.apli' 'Square.aplc' 'Circle.aplc'
+shapes←(⎕NEW Square 3)(⎕NEW Circle 1)
+⎕←↑{⍵.Name,': area ',⍕⍵.Area}¨shapes
+
+⎕←'── .apla (array notation)'
+g←Apla'Grid.apla' ⋄ ⎕←g ⋄ ⎕←'sum of each row: ',⍕+/g
+p←Apla'People.apla'
+⎕←'people: ',⍕p.name
+⎕←'average age: ',⍕Avg p.age

@@ -1,0 +1,8 @@
+:Interface Shape
+⍝ .apli: an interface, a list of members a class promises to provide.
+⍝ Square.aplc and Circle.aplc both implement it.
+    ∇ r←Area
+    ∇
+    ∇ r←Name
+    ∇
+:EndInterface

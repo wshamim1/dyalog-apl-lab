@@ -1,0 +1,21 @@
+:Namespace Stats
+⍝ .apln: a namespace, a named group of related functions (and variables).
+⍝   Stats.Mean 2 4 9   →   5
+
+    Mean←{(+/⍵)÷≢⍵}
+    Median←{s←⍵[⍋⍵] ⋄ n←≢⍵ ⋄ Mean s[(⌈n÷2),1+⌊n÷2]}
+    Range←{(⌈/⍵)-⌊/⍵}
+    SD←{(Mean(⍵-Mean ⍵)*2)*0.5}
+
+    ∇ r←Summary v
+    ⍝ A tradfn inside a namespace
+      r←'mean' 'median' 'sd',[1.5](Mean v)(Median v)(SD v)
+    ∇
+
+    ∇ Run
+    ⍝ Called automatically when this file is loaded at startup
+    ⍝ (`dyalog Stats.apln`): a namespace's Run is its entry point.
+      ⎕←'Stats loaded. Example: Stats.Summary 3 1 4 1 5 9'
+      ⎕←Summary 3 1 4 1 5 9
+    ∇
+:EndNamespace
