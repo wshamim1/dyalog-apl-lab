@@ -8,11 +8,12 @@
 #   ./docker.sh run       # interactive APL session in this terminal
 #   ./docker.sh ride      # interpreter serving RIDE on port 4502
 #
-# The repo root is mounted at /app inside the container.
+# The repo root (or MOUNT_DIR) is mounted at /app inside the container.
 #
 # Env:
 #   IMAGE       image to use   (default: docker.io/dyalog/dyalog)
 #   RIDE_PORT   port for ride  (default: 4502)
+#   MOUNT_DIR   host folder mounted at /app (default: the repo root)
 
 set -euo pipefail
 
@@ -21,12 +22,13 @@ IMAGE="${IMAGE:-docker.io/dyalog/dyalog}"
 RIDE_PORT="${RIDE_PORT:-4502}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+MOUNT_DIR="$(cd "${MOUNT_DIR:-$REPO_ROOT}" && pwd)"
 SELF="${SELF:-$0}"
 
 info() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33mwarning:\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[1;31merror:\033[0m %s\n' "$*" >&2; exit 1; }
-usage() { sed -n '5,15p' "$SCRIPT_DIR/container.sh" | sed 's/^# \{0,1\}//' | sed "s|./docker.sh|$SELF|"; }
+usage() { sed -n '5,16p' "$SCRIPT_DIR/container.sh" | sed 's/^# \{0,1\}//' | sed "s|./docker.sh|$SELF|"; }
 
 case "$ENGINE" in docker|podman) ;; *) die "ENGINE must be docker or podman" ;; esac
 
@@ -99,7 +101,7 @@ ensure_image() {
 }
 
 run_container() {
-  local extra=("$@") vol="$REPO_ROOT:/app"
+  local extra=("$@") vol="$MOUNT_DIR:/app"
   # SELinux relabel on Linux hosts only.
   if [ "$ENGINE" = podman ] && [ "$(uname -s)" = Linux ]; then vol="$vol:Z"; fi
   # shellcheck disable=SC2046
@@ -126,7 +128,7 @@ case "${1:-}" in
     have "$ENGINE" || die "$ENGINE not found. Run: $SELF install"
     start_engine
     ensure_image
-    info "Starting Dyalog ($ENGINE). Repo is mounted at /app. Exit with )off"
+    info "Starting Dyalog ($ENGINE). $MOUNT_DIR is mounted at /app. Exit with )off"
     run_container
     ;;
   ride)

@@ -36,11 +36,33 @@ find_mapl() {
 require_mapl() {
   MAPL="$(find_mapl || true)"
   [ -n "$MAPL" ] || die "Dyalog not found in /Applications. Run: $0 install"
+  check_arch
+}
+
+# The app must be built for this Mac's CPU. An Intel Mac can't run an
+# Apple Silicon (arm64) build ("Bad CPU type in executable").
+check_arch() {
+  local bin archs cpu
+  bin="$(find_app)/Contents/Resources/Dyalog/dyalog"
+  [ -f "$bin" ] || return 0
+  archs="$(lipo -archs "$bin" 2>/dev/null || true)"
+  cpu="$(uname -m)"
+  [ -z "$archs" ] && return 0
+  case " $archs " in
+    *" $cpu "*) return 0 ;;
+  esac
+  if [ "$cpu" = arm64 ] && [[ " $archs " == *" x86_64 "* ]]; then
+    return 0   # Intel build on Apple Silicon runs under Rosetta
+  fi
+  die "$(find_app) is built for '$archs' but this Mac is '$cpu' ($( [ "$cpu" = x86_64 ] && echo Intel || echo 'Apple Silicon')).
+       Delete it and download the macOS installer for $( [ "$cpu" = x86_64 ] && echo 'Intel (x86_64)' || echo 'Apple Silicon (arm64)') from $DOWNLOAD_URL
+       If there's no build for your Mac, use the container-based command instead: install/dyalog/install-cli.sh, then dyalog"
 }
 
 case "${1:-}" in
   install)
     if MAPL="$(find_mapl)"; then
+      check_arch
       info "Dyalog is already installed: $(find_app)"
       exit 0
     fi

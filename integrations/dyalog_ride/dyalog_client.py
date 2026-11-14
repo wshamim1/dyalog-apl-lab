@@ -426,7 +426,7 @@ def main(argv: list[str]) -> int:
     a = p.parse_args(argv)
 
     try:
-        with DyalogClient(a.host, a.port, connect_timeout=5) as client:
+        with DyalogClient(a.host, a.port, connect_timeout=15) as client:
             if not a.code:
                 _repl(client)
                 return 0

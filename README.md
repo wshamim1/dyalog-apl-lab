@@ -18,7 +18,11 @@ the interpreter, so you also need RIDE (or you can just use the terminal).
 Pick one way to run Dyalog:
 
 ```sh
-# Native macOS app (opens the download page if it isn't installed)
+# Intel Mac (or no app): a `dyalog` command that runs Dyalog in a container
+install/dyalog/install-cli.sh
+dyalog
+
+# Native macOS app, Apple Silicon only (opens the download page if it isn't installed)
 install/dyalog/mac.sh install
 install/dyalog/mac.sh run
 
@@ -72,6 +76,7 @@ install/
     docker.md   docker.sh   Docker
     podman.md   podman.sh   Podman
     container.sh            shared logic for docker.sh / podman.sh
+    dyalog, install-cli.sh  the `dyalog` command (container-based) and its installer
   ride/       build and run RIDE from source
     README.md
     install.sh

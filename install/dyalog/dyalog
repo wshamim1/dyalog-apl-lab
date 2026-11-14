@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# `dyalog` command: run Dyalog APL from any folder, using a container.
+# For Macs that can't run the native app (e.g. Intel Macs with Dyalog 21).
+#
+# Usage:
+#   dyalog                 APL session in this terminal; current folder at /app
+#   dyalog ride            serve RIDE on localhost:4502 (connect RIDE to it)
+#   dyalog pull            update the Dyalog image
+#   dyalog setup           install/start Podman (or Docker) and pull the image
+#   dyalog help
+#
+# Env:
+#   DYALOG_ENGINE   podman or docker (default: podman if installed, else docker)
+#   IMAGE           image (default: docker.io/dyalog/dyalog;
+#                   use localhost/dyalog-mysql:latest for the MySQL functions)
+#   RIDE_PORT       port for `dyalog ride` (default: 4502)
+#
+# Install:  install/dyalog/install-cli.sh
+
+set -euo pipefail
+
+# Resolve our real location even when called through a symlink.
+src="${BASH_SOURCE[0]}"
+while [ -L "$src" ]; do
+  dir="$(cd "$(dirname "$src")" && pwd)"
+  src="$(readlink "$src")"
+  [[ "$src" != /* ]] && src="$dir/$src"
+done
+HERE="$(cd "$(dirname "$src")" && pwd)"
+
+if [ -z "${DYALOG_ENGINE:-}" ]; then
+  if command -v podman >/dev/null 2>&1; then DYALOG_ENGINE=podman
+  elif command -v docker >/dev/null 2>&1; then DYALOG_ENGINE=docker
+  else DYALOG_ENGINE=podman   # `dyalog setup` will install it
+  fi
+fi
+
+run() { ENGINE="$DYALOG_ENGINE" SELF=dyalog MOUNT_DIR="$PWD" exec "$HERE/container.sh" "$@"; }
+
+case "${1:-}" in
+  "")              run run ;;
+  ride)            run ride ;;
+  pull)            run pull ;;
+  setup|install)   run install ;;
+  -h|--help|help)  sed -n '2,18p' "$src" | sed 's/^# \{0,1\}//' ;;
+  *) echo "dyalog: unknown command '$1' (try: dyalog help)" >&2; exit 1 ;;
+esac
