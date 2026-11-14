@@ -85,6 +85,10 @@ finally:
   and `timed_out=True`.
 - **Input (`⎕` / `⍞`):** not supported. The request is cancelled and
   `awaiting_input=True`.
+- **Multi-line dfns and control structures** (`F←{` … `}`, `:If` … `:EndIf`)
+  can be sent as several lines. An unclosed `{` is caught before sending
+  and reported as a `SYNTAX ERROR`, because otherwise the session would wait
+  forever for the closing `}`.
 - **Dialogs** the interpreter opens are dismissed automatically.
 
 ### Safety

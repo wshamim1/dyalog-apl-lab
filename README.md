@@ -62,6 +62,7 @@ from first steps to control structures, each with exercises.
 tutorials/    lessons 00–11 with exercises (start here)
 integrations/ connect Dyalog to other systems
   dyalog_ride/  Python client for a live Dyalog session (RIDE protocol)
+  streamlit_app/ web UI: plain English → APL with OpenAI, plus a REPL
 install/
   dyalog/     install & run the Dyalog interpreter
     README.md   overview of the options

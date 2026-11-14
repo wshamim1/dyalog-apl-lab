@@ -115,7 +115,9 @@ def ask(openai_client, model: str, apl: DyalogClient, history: list[dict],
     # Ran out of steps: ask for a final answer without tools.
     history.append({"role": "user", "content":
                     "Stop running code now and give your best final answer."})
-    resp = openai_client.chat.completions.create(model=model, messages=history)
+    resp = openai_client.chat.completions.create(
+        model=model, messages=history, tools=TOOLS, tool_choice="none",
+    )
     text = resp.choices[0].message.content or ""
     history.append({"role": "assistant", "content": text})
     return Answer(text=text, steps=steps, stopped_early=True)

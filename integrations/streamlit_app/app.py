@@ -201,11 +201,11 @@ with tab_repl:
             col.button(g, key=f"g{r}_{c}", on_click=add_glyph, args=(g,),
                        use_container_width=True)
 
-    with st.form("repl", clear_on_submit=False):
-        st.text_area("APL", key="repl_code", height=90,
-                     placeholder="e.g.  +/⍳100   or   3 4⍴⍳12")
-        submitted = st.form_submit_button("Run ▶", type="primary")
-    if submitted and ss.repl_code.strip():
+    # Not inside st.form: form fields only save on submit, so glyph clicks
+    # would overwrite what you'd typed.
+    st.text_area("APL", key="repl_code", height=90,
+                 placeholder="e.g.  +/⍳100   or   3 4⍴⍳12")
+    if st.button("Run ▶", type="primary") and ss.repl_code.strip():
         r = run_apl(ss.repl_code)
         if r is not None:
             ss.repl_log.insert(0, (ss.repl_code, r.output, r.error or r.timed_out))

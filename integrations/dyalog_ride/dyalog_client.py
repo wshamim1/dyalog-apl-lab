@@ -35,6 +35,7 @@ DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 4502
 
 # AppendSessionOutput "type" values (see protocol.md)
+OUT_PROMPT = 1          # "undetermined"; used for the continuation prompt
 OUT_ECHO_INPUT = 11
 OUT_NORMAL_INPUT = 14
 OUT_ERROR = 5
@@ -160,9 +161,27 @@ class DyalogClient:
         self._flush()
         result = Result(code=code)
         out: list[str] = []
+
+        # An unclosed { puts the session into multi-line mode, which only a
+        # closing } can leave. Catch that here instead of hanging.
+        depth = _brace_depth(code)
+        if depth > 0:
+            result.error = True
+            result.output = (f"SYNTAX ERROR: {depth} unclosed '{{' "
+                             "(code not run). Add the matching '}'.")
+            return result
+
         for line in code.splitlines() or [""]:
             if not self._execute_line(line, timeout, result, out):
                 break
+        if self._prompt == PROMPT_LINE_EDITOR:
+            # Still inside an unfinished multi-line block: close it.
+            result.error = True
+            out.append("\n[incomplete multi-line input; block closed]")
+            for _ in range(10):
+                self._execute_line("}", 5, Result(code="}"), [])
+                if self._prompt != PROMPT_LINE_EDITOR:
+                    break
         if result.timed_out or result.awaiting_input:
             # Abort the running line / input request and get back to a prompt,
             # so later output can't leak into the next result.
@@ -210,6 +229,8 @@ class DyalogClient:
                 text = args.get("result", "")
                 if isinstance(text, list):          # older interpreters
                     text = "\n".join(text) + "\n"
+                if args.get("type") == OUT_PROMPT and not text.strip():
+                    continue                        # continuation prompt "      "
                 out.append(text)
             elif name == "HadError":
                 result.error = True
@@ -219,6 +240,8 @@ class DyalogClient:
                 self._prompt = ptype
                 if ptype == PROMPT_APL:
                     return not result.error
+                if ptype == PROMPT_LINE_EDITOR:
+                    return True     # inside a multi-line dfn: send next line
                 if ptype in (PROMPT_QUAD, PROMPT_QUOTE_QUAD):
                     result.awaiting_input = True
                     return False
@@ -310,6 +333,25 @@ class DyalogClient:
             return json.loads(raw)
         except json.JSONDecodeError:
             return ["_Raw", {"text": raw}]
+
+
+def _brace_depth(code: str) -> int:
+    """Net count of '{' minus '}' outside strings and comments."""
+    depth = 0
+    for line in code.splitlines():
+        in_quote = False
+        for ch in line:
+            if ch == "'":
+                in_quote = not in_quote       # '' inside a string toggles twice
+            elif in_quote:
+                continue
+            elif ch == "⍝":
+                break
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+    return depth
 
 
 # ---------------------------------------------------------------- container
