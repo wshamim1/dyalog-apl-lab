@@ -1,0 +1,6 @@
+ Fact←{
+     ⍝ Factorial, written recursively.
+     ⍝ ∇ means "this function".
+     ⍵≤1:1          ⍝ guard: if ⍵≤1, the result is 1
+     ⍵×∇ ⍵-1        ⍝ otherwise ⍵ × Fact ⍵-1
+ }

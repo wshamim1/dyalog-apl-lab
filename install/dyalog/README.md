@@ -25,6 +25,10 @@ Each script has the same subcommands:
 - `ride` starts the interpreter serving RIDE on `localhost:4502`. Then open
   RIDE and choose **Connect**.
 
+Example: `./podman.sh install`, then `./podman.sh run`:
+
+![Pulling the Dyalog image with podman.sh install, then starting an APL session with podman.sh run](images/podman-run.png)
+
 `docker.sh` and `podman.sh` both use [container.sh](container.sh). They mount
 the repo root at `/app` inside the container. Set `RIDE_PORT` to use a
 different port.

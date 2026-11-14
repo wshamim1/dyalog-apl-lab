@@ -1,0 +1,7 @@
+ Hyp←{
+     ⍝ Length of the hypotenuse of a right triangle with sides ⍺ and ⍵.
+     ⍝ Default ⍺ is 1 when called with one argument.
+     ⍺←1
+     sq←(⍺*2)+⍵*2   ⍝ local variable
+     sq*0.5
+ }
