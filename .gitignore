@@ -1,0 +1,8 @@
+# RIDE source cloned by install/ride/install.sh
+/install/ride/ride/
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
