@@ -123,13 +123,14 @@ The last line counts the vowels.
 
 ## If-then-else without `if`
 
-Choose between two values using a boolean as an index:
+Choose between two values using a boolean as an index. `n⊃list` (pick)
+takes item `n`:
 
 ```apl
-      'no' 'yes'[1+5>3]
-┌───┐
-│yes│
-└───┘
+      (1+5>3)⊃'no' 'yes'
+yes
+      (1+2>3)⊃'no' 'yes'
+no
 ```
 
 Or apply a different result per element:

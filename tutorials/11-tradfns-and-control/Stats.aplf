@@ -1,0 +1,5 @@
+ r←Stats v;n
+⍝ Mean, minimum and maximum of a numeric vector.
+⍝ r is the result; v is the right argument; n is a local name.
+ n←≢v
+ r←((+/v)÷n),(⌊/v),⌈/v

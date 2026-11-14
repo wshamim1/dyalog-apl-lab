@@ -1,0 +1,11 @@
+ steps←Collatz n
+⍝ Number of steps for n to reach 1 in the Collatz sequence (:While loop).
+ steps←0
+ :While n≠1
+     :If 0=2|n
+         n←n÷2
+     :Else
+         n←1+3×n
+     :EndIf
+     steps+←1
+ :EndWhile

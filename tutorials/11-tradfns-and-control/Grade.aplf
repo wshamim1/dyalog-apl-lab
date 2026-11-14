@@ -1,0 +1,11 @@
+ r←Grade score
+⍝ Letter grade for one score, using :If / :ElseIf / :Else.
+ :If score≥90
+     r←'A'
+ :ElseIf score≥80
+     r←'B'
+ :ElseIf score≥70
+     r←'C'
+ :Else
+     r←'F'
+ :EndIf

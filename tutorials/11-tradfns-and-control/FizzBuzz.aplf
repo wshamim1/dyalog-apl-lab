@@ -1,0 +1,14 @@
+ FizzBuzz n;i
+⍝ Print FizzBuzz from 1 to n using a :For loop. No result (prints with ⎕←).
+ :For i :In ⍳n
+     :Select 0=3 5|i
+     :Case 1 1
+         ⎕←'FizzBuzz'
+     :Case 1 0
+         ⎕←'Fizz'
+     :Case 0 1
+         ⎕←'Buzz'
+     :Else
+         ⎕←i
+     :EndSelect
+ :EndFor

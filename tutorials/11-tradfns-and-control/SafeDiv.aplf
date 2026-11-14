@@ -1,0 +1,7 @@
+ r←a SafeDiv b
+⍝ Divide a by b, returning 0 instead of failing on DOMAIN ERROR (:Trap).
+ :Trap 11       ⍝ 11 is the error number of DOMAIN ERROR
+     r←a÷b
+ :Else
+     r←0
+ :EndTrap

@@ -51,9 +51,15 @@ In RIDE choose **Connect**, host `localhost`, port `4502`.
 
 You should get `1 2 3 4 5 6 7 8 9 10` and `5050`.
 
+## Tutorials
+
+Start with [tutorials/](tutorials/README.md). There are 12 short lessons,
+from first steps to control structures, each with exercises.
+
 ## Repository layout
 
 ```
+tutorials/    lessons 00–11 with exercises (start here)
 install/
   dyalog/     install & run the Dyalog interpreter
     README.md   overview of the options
