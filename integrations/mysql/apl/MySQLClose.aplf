@@ -1,0 +1,4 @@
+ MySQLClose cid
+⍝ Close a connection opened with MySQLConnect.
+⍝   MySQLClose db
+ {}#.SQA.Close cid

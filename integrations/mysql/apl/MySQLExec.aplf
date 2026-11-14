@@ -1,0 +1,18 @@
+ n←cid MySQLExec q;sql;binds;c;r
+⍝ Run a statement that doesn't return rows: INSERT, UPDATE, DELETE, CREATE …
+⍝ Returns the number of rows affected.
+⍝
+⍝   db MySQLExec 'CREATE TABLE notes (id INT, txt VARCHAR(100))'
+⍝   db MySQLExec 'INSERT INTO notes VALUES (:1<I:, :2<C100:)' 1 'hello'
+⍝   db MySQLExec 'UPDATE notes SET txt=:1<C100: WHERE id=:2<I:' 'hi' 1
+
+ (sql binds)←{1≥|≡⍵:⍵ ⍬ ⋄ (⊃⍵)(1↓⍵)}q
+ c←2⊃#.SQA.CursorName cid
+ :If 0=⊃r←#.SQA.Prepare c sql
+     r←#.SQA.Exec(⊂c),binds
+ :EndIf
+ {}#.SQA.Close c
+ :If 0≠⊃r
+     ⎕SIGNAL⊂('EN' 11)('Message'('MySQLExec: ',⍕3⊃r))
+ :EndIf
+ n←{1<≢⍵:2⊃⍵ ⋄ 0}r

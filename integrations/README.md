@@ -6,6 +6,7 @@ Ways to connect Dyalog APL to other systems.
 | --- | --- | --- |
 | [dyalog_ride/](dyalog_ride/README.md) | Python client for a live Dyalog session over the RIDE protocol. The others build on it. | ready |
 | [streamlit_app/](streamlit_app/README.md) | Web UI: describe what you want in English, and an OpenAI model writes and runs the APL. Also has a plain APL REPL. | ready |
+| [mysql/](mysql/README.md) | Load MySQL query results into APL, analyse them, and write results back as tables. Use it from Python, or straight from APL with `.aplf` functions ([mysql/apl](mysql/apl/README.md)). | ready |
 | `mcp_server/` | MCP tools (`apl_eval`, `apl_load`, `apl_reset`) for Claude Code, Claude Desktop and other clients | planned |
 | `kafka/` | Run APL on messages from Kafka topics | planned |
 
@@ -20,6 +21,7 @@ flowchart LR
         st["streamlit_app<br/>web UI + OpenAI"]
         mcp["mcp_server<br/>(planned)"]:::planned
         kafka["kafka<br/>(planned)"]:::planned
+        mysqlint["mysql<br/>MySQL bridge"]
         ride["dyalog_ride<br/>RIDE protocol client"]
     end
 
@@ -27,10 +29,12 @@ flowchart LR
     llmclients(["Claude Code /<br/>Claude Desktop"]) -.-> mcp
     topics(["Kafka topics"]) -.-> kafka
     st --> openai["☁️ OpenAI"]
+    mysqlint <--> mysqldb[("MySQL")]
 
     st --> ride
     mcp -.-> ride
     kafka -.-> ride
+    mysqlint --> ride
     ride -- "TCP :4502" --> dyalog[("Dyalog APL<br/>container")]
 
     classDef planned stroke-dasharray: 5 5

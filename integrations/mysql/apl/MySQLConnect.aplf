@@ -1,0 +1,36 @@
+ cid←{cid}MySQLConnect cfg;host;port;db;user;pw;cs;r
+⍝ Connect to MySQL from APL using SQAPL (Dyalog's ODBC interface).
+⍝ Needs the MariaDB ODBC driver: run Dyalog in the dyalog-mysql image
+⍝ (see integrations/mysql/apl/README.md).
+⍝
+⍝   cfg ← host port database user password   (database may be '')
+⍝   cid ← optional connection name; returned as the result. Without one, a
+⍝         unique name is generated. Passing a name that's already connected
+⍝         closes that connection first.
+⍝
+⍝   db←MySQLConnect 'host.containers.internal' 3307 'apl_demo' 'root' 'secret'
+⍝
+⍝ From inside a container, your Mac is 'host.containers.internal' (Podman)
+⍝ or 'host.docker.internal' (Docker).
+
+ (host port db user pw)←cfg
+
+ :If 0=⎕NC'#.SQA'                     ⍝ load SQAPL once, into the root
+     'SQA'#.⎕CY'sqapl'
+ :EndIf
+ r←#.SQA.Init''
+ :If 0≠⊃r ⋄ ('SQAPL init failed: ',⍕2⊃r)⎕SIGNAL 11 ⋄ :EndIf
+
+ :If 0=⎕NC'cid'
+     cid←'MYSQL',⍕100000+?899999      ⍝ unique: never closes another connection
+ :Else
+     {}#.SQA.Close cid                ⍝ named: replace that connection
+ :EndIf
+ ⍝ {…} around the password lets it contain ; and other special characters
+ cs←'DRIVER={MariaDB Unicode};SERVER=',host,';PORT=',(⍕port)
+ cs,←(0<≢db)/';DATABASE=',db         ⍝ database '' → connect without one
+ cs,←';UID=',user,';PWD={',pw,'}'
+ r←#.SQA.Connect cid'' '' ''cs
+ :If 0≠⊃r
+     ⎕SIGNAL⊂('EN' 11)('Message'('MySQLConnect: ',⍕3⊃r))
+ :EndIf

@@ -1,0 +1,41 @@
+ n←cid MySQLSave args;table;ns;mode;cols;vals;types;SqlType;Mark;sql;c;r;row;Kind;Fail
+⍝ Write a namespace of equal-length column vectors to a MySQL table.
+⍝
+⍝   r←⎕NS ⍬ ⋄ r.(region orders total)←('North' 'South')(3 5)(10.5 20)
+⍝   db MySQLSave 'region_summary' r             ⍝ replace: drop, create, insert
+⍝   db MySQLSave 'region_summary' r 'append'    ⍝ add rows to an existing table
+⍝
+⍝ Column types are inferred: whole numbers → BIGINT, other numbers →
+⍝ DOUBLE, text → VARCHAR(255) (TEXT if longer). Returns the rows written.
+
+ (table ns mode)←3↑args,⊂'replace'
+ cols←(ns.⎕NL ¯2)~'columns' 'data'      ⍝ variables, minus MySQLQuery's extras
+ vals←ns.⍎¨cols
+ vals←{1≥|≡⍵:,⍵ ⋄ ⍵}¨vals               ⍝ scalar → 1-item vector
+ vals←{(0=10|⎕DR ⍵)∧1=|≡⍵:,¨⍵ ⋄ ⍵}¨vals ⍝ 'ABC' (single letters) → 'A' 'B' 'C'
+ :If 1≠≢∪≢¨vals
+     ⎕SIGNAL⊂('EN' 5)('Message'('MySQLSave: columns differ in length:',∊cols{' ',⍺,'=',⍕⍵}¨≢¨vals))
+ :EndIf
+
+ Kind←{0=≢⍵:0 ⋄ ∨/{' '=⊃0⍴⍵}¨⍵:2 ⋄ ∧/⍵=⌊⍵:0 ⋄ 1}   ⍝ 0 int, 1 float, 2 text
+ types←Kind¨vals
+ Fail←{_←#.SQA.Close c ⋄ ⎕SIGNAL⊂('EN' 11)('Message'('MySQLSave: ',⍕3⊃⍵))}
+
+ :If mode≡'replace'
+     SqlType←{⍺=0:'BIGINT' ⋄ ⍺=1:'DOUBLE' ⋄ 255<⌈/0,≢¨⍵:'TEXT' ⋄ 'VARCHAR(255)'}
+     sql←¯2↓∊cols{'`',⍺,'` ',⍵,', '}¨types SqlType¨vals
+     {}cid MySQLExec'DROP TABLE IF EXISTS `',table,'`'
+     {}cid MySQLExec'CREATE TABLE `',table,'` (',sql,')'
+ :EndIf
+
+ ⍝ One prepared INSERT with bind markers (:1<I:, :2<C20:, …), run per row
+ Mark←{⍺=0:'I' ⋄ ⍺=1:'F' ⋄ 'C',⍕1⌈⌈/0,≢¨⍵}
+ sql←'INSERT INTO `',table,'` (',(¯2↓∊'`',¨cols,¨⊂'`, '),') VALUES ('
+ sql,←(¯2↓∊(⍳≢cols){':',(⍕⍺),'<',⍵,':, '}¨types Mark¨vals),')'
+ c←2⊃#.SQA.CursorName cid
+ :If 0≠⊃r←#.SQA.Prepare c sql ⋄ Fail r ⋄ :EndIf
+ :For row :In ↓⍉↑vals
+     :If 0≠⊃r←#.SQA.Exec(⊂c),row ⋄ Fail r ⋄ :EndIf
+ :EndFor
+ {}#.SQA.Close c
+ n←≢⊃vals

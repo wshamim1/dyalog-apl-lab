@@ -24,6 +24,7 @@ Protocol reference: https://github.com/Dyalog/ride/blob/master/docs/protocol.md
 from __future__ import annotations
 
 import json
+import select
 import socket
 import struct
 import subprocess
@@ -33,6 +34,10 @@ from dataclasses import dataclass, field
 
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 4502
+
+# Longest line we send. Dyalog 21 opens an "INPUT LIMIT" dialog for session
+# input over ~750 characters, and the session then stops responding.
+MAX_LINE_CHARS = 700
 
 # AppendSessionOutput "type" values (see protocol.md)
 OUT_PROMPT = 1          # "undetermined"; used for the continuation prompt
@@ -164,6 +169,18 @@ class DyalogClient:
 
         # An unclosed { puts the session into multi-line mode, which only a
         # closing } can leave. Catch that here instead of hanging.
+        # Dyalog shows an "INPUT LIMIT" dialog for session lines over ~750
+        # characters, after which the session stops responding. Refuse them.
+        too_long = [i for i, ln in enumerate(code.splitlines(), 1)
+                    if len(ln) > MAX_LINE_CHARS]
+        if too_long:
+            result.error = True
+            result.output = (f"LINE TOO LONG: line {too_long[0]} has "
+                             f"{len(code.splitlines()[too_long[0] - 1])} characters "
+                             f"(limit {MAX_LINE_CHARS}; code not run). Split it "
+                             "into several statements on separate lines.")
+            return result
+
         depth = _brace_depth(code)
         if depth > 0:
             result.error = True
@@ -280,8 +297,11 @@ class DyalogClient:
         # Everything else (OpenWindow, UpdateDisplayName, ...) is ignored.
 
     def _flush(self) -> None:
-        """Discard any messages still queued from earlier work."""
-        while (msg := self._recv(timeout=0.02)) is not None:
+        """Discard any messages still queued from earlier work (non-blocking)."""
+        while self._buf or select.select([self._sock], [], [], 0)[0]:
+            msg = self._recv(timeout=0.05)
+            if msg is None:
+                break
             self._auto_reply(msg[0], msg[1] if len(msg) > 1 else {})
 
     def _drain_until_prompt(self, timeout: float) -> None:

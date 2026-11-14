@@ -1,0 +1,54 @@
+ SalesDemo cfg;db;name;i;seed;s;byRegion;q;m;r;mm;Cents
+⍝ End-to-end demo, all in APL: MySQL → APL analysis → MySQL.
+⍝
+⍝   SalesDemo 'host.containers.internal' 3307 'apl_demo' 'root' 'secret'
+⍝
+⍝ Creates the database and a `sales` table with 60 sample rows if needed,
+⍝ analyses them, and writes region_summary and monthly_revenue back.
+
+ name←3⊃cfg
+ db←MySQLConnect(2↑cfg),(⊂''),3↓cfg            ⍝ connect without a database
+ {}db MySQLExec'CREATE DATABASE IF NOT EXISTS `',name,'`'
+ {}db MySQLExec'USE `',name,'`'
+ {}db MySQLExec'CREATE TABLE IF NOT EXISTS sales (id INT AUTO_INCREMENT PRIMARY KEY, sale_date DATE, region VARCHAR(20), product VARCHAR(30), qty INT, price DECIMAL(8,2))'
+
+ :If 0=⊃(db MySQLQuery'SELECT COUNT(*) AS n FROM sales').n
+     ⍝ 60 deterministic sample rows, built with array expressions
+     i←⍳60
+     seed←⎕NS ⍬
+     seed.sale_date←{'2026-0',(⍕1+⌊(⍵-1)÷10),'-',¯2↑'0',⍕1+28|7×⍵}¨i
+     seed.region←('North' 'South' 'East' 'West')[1+4|(3×i)+⌊i÷7]
+     seed.product←('Widget' 'Gadget' 'Doohickey' 'Gizmo' 'Thingamajig')[1+5|(2×i)+⌊i÷9]
+     seed.qty←1+19|(7×i)+⌊i÷4
+     seed.price←4.99 9.99 14.5 19.99 49[1+5|(11×i)+⌊i÷6]
+     ⎕←'Seeded ',(⍕db MySQLSave'sales'seed'append'),' rows into ',name,'.sales'
+ :EndIf
+
+ ⍝ 1. MySQL → APL ------------------------------------------------------
+ s←db MySQLQuery'SELECT sale_date, region, product, qty, price, qty*price AS amount FROM sales ORDER BY sale_date'
+ ⎕←'Loaded ',(⍕≢s.data),' rows. Columns: ',⍕s.columns
+
+ ⍝ 2. Analysis in APL --------------------------------------------------
+ ⎕←'' ⋄ ⎕←'Total revenue  (+/s.amount):' ⋄ ⎕←+/s.amount
+
+ byRegion←s.region{⍺,(≢⍵),+/⍵}⌸s.amount
+ ⎕←'' ⋄ ⎕←'Orders and revenue per region  (⌸ key):' ⋄ ⎕←byRegion
+
+ q←s.product{⍺,+/⍵}⌸s.qty
+ ⎕←'' ⋄ ⎕←'Top 3 products by quantity  (⍒ grade down):' ⋄ ⎕←3↑q[⍒q[;2];]
+
+ s.month←7↑¨s.sale_date                   ⍝ '2026-03-14' → '2026-03'
+ m←s.month{⍺,+/⍵}⌸s.amount
+ ⎕←'' ⋄ ⎕←'Revenue per month with running total  (+\ scan):' ⋄ ⎕←m,+\m[;2]
+
+ ⍝ 3. APL → MySQL ------------------------------------------------------
+ Cents←{(⌊0.5+100×⍵)÷100}
+ r←⎕NS ⍬ ⋄ r.(region orders revenue)←↓⍉byRegion ⋄ r.revenue←Cents r.revenue
+ mm←⎕NS ⍬ ⋄ mm.(month revenue)←↓⍉m
+ mm.running←Cents+\mm.revenue ⋄ mm.revenue←Cents mm.revenue
+ ⎕←'' ⋄ ⎕←'Saved region_summary: ',(⍕db MySQLSave'region_summary'r),' rows'
+ ⎕←'Saved monthly_revenue: ',(⍕db MySQLSave'monthly_revenue'mm),' rows'
+
+ ⎕←'' ⋄ ⎕←'Read back with SQL:'
+ ⎕←(db MySQLQuery'SELECT region, orders, revenue FROM region_summary ORDER BY revenue DESC').data
+ MySQLClose db

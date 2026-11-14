@@ -85,6 +85,10 @@ finally:
   and `timed_out=True`.
 - **Input (`⎕` / `⍞`):** not supported. The request is cancelled and
   `awaiting_input=True`.
+- **Long lines:** lines over 700 characters are refused with a
+  `LINE TOO LONG` error, without being sent. Dyalog shows an "INPUT LIMIT"
+  dialog for session lines over about 750 characters, and the session then
+  stops responding.
 - **Multi-line dfns and control structures** (`F←{` … `}`, `:If` … `:EndIf`)
   can be sent as several lines. An unclosed `{` is caught before sending
   and reported as a `SYNTAX ERROR`, because otherwise the session would wait

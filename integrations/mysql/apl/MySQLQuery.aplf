@@ -1,0 +1,50 @@
+ t←cid MySQLQuery q;sql;binds;c;d;f;desc;names;data;i;Check;Utf8
+⍝ Run a SELECT and return a namespace with one vector per column.
+⍝ Also sets t.columns (the names) and t.data (the result as a matrix).
+⍝
+⍝   s←db MySQLQuery 'SELECT region, qty*price AS amount FROM sales'
+⍝   s.region  s.amount  s.columns  s.data
+⍝
+⍝ With parameters, use SQAPL bind markers :n<type: and pass the values:
+⍝   s←db MySQLQuery 'SELECT * FROM sales WHERE region=:1<C20: AND qty>:2<I:' 'North' 5
+⍝   types: I integer, F float, C<n> text up to n characters
+⍝
+⍝ Column names must be valid APL names, so alias expressions (AS amount).
+⍝ NULLs come back as 0 (numbers) or '' (text). Dates come back as text
+⍝ ('2026-03-14'). BIGINTs are converted from text to numbers.
+
+ (sql binds)←{1≥|≡⍵:⍵ ⍬ ⋄ (⊃⍵)(1↓⍵)}q
+ c←2⊃#.SQA.CursorName cid
+ Check←{0=⊃⍵:⍵ ⋄ _←#.SQA.Close c ⋄ ⎕SIGNAL⊂('EN' 11)('Message'('MySQLQuery: ',⍕3⊃⍵))}
+ {}Check #.SQA.Prepare c sql
+ {}Check #.SQA.Exec(⊂c),binds
+ d←Check 0 #.SQA.Describe c
+ f←Check 1 #.SQA.Fetch c
+ {}#.SQA.Close c
+
+ ⍝ Describe lists bind parameters first, then the result columns
+ desc←(≢binds)↓2⊃2⊃d
+ names←⊃∘⊃¨desc
+ data←⊃2⊃f
+ :If 0∊⍴data ⋄ data←(0,≢names)⍴0 ⋄ :EndIf
+
+ ⍝ SQAPL returns text as UTF-8 bytes; decode it (leave numbers alone)
+ Utf8←{0::⍵ ⋄ (0=≢⍵)∨' '≠⊃0⍴⍵:⍵ ⋄ 'UTF-8'⎕UCS ⎕UCS ⍵}
+ data←Utf8¨data
+
+ ⍝ BIGINT columns (ODBC type ¯5, e.g. COUNT(*)) arrive as text; make numbers
+ :For i :In ⍸¯5=(5⊃⊃)¨desc         ⍝ 5th item of a column's description = SQL type
+     data[;i]←{0=≢⍵:0 ⋄ ⊃2⊃⎕VFI ⍵}¨data[;i]
+ :EndFor
+
+ :If ¯1∊⎕NC↑names
+     ⎕SIGNAL⊂('EN' 11)('Message'('MySQLQuery: alias columns to valid APL names: ',⍕names))
+ :EndIf
+ t←⎕NS ⍬
+ t.columns←names
+ t.data←data
+ :For i :In ⍳≢names
+     t.⍙v←data[;i]
+     t⍎(i⊃names),'←⍙v'
+ :EndFor
+ t.⎕EX'⍙v'
