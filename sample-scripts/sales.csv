@@ -1,0 +1,11 @@
+region,product,qty,price
+North,Widget,12,4.99
+South,Gadget,5,19.99
+East,Widget,8,4.99
+West,Gizmo,3,49.00
+North,Gadget,7,19.99
+South,Widget,20,4.99
+East,Gizmo,2,49.00
+West,Widget,15,4.99
+North,Gizmo,4,49.00
+East,Gadget,9,19.99

@@ -1,0 +1,16 @@
+⍝ 07 · Matrices: tables, identity, matrix product, solving equations
+⍝ Run:  dyalog sample-scripts/07-matrices.apls
+
+⎕←'multiplication table (∘.×):' ⋄ ⎕←(⍳6)∘.×⍳6
+⎕←'identity matrix (∘.=):'      ⋄ ⎕←(⍳4)∘.=⍳4
+
+a←2 2⍴1 2 3 4
+b←2 2⍴5 6 7 8
+⎕←'a +.× b  (matrix product):' ⋄ ⎕←a+.×b
+
+⍝ Solve  2x + y = 5,  x - y = 1   with ⌹ (domino)
+coef←2 2⍴2 1 1 ¯1
+⎕←'solution of 2x+y=5, x-y=1 (⌹): x y = ',⍕5 1⌹coef
+
+⎕←'inverse of a:' ⋄ ⎕←⌹a
+⎕←'a +.× (⌹a) is the identity: ',⍕((⍳2)∘.=⍳2)≡⌊0.5+a+.×⌹a

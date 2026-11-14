@@ -1,0 +1,17 @@
+⍝ 09 · Word frequency in a text file (reads poem.txt next to this script)
+⍝ Run:  dyalog sample-scripts/09-word-count.apls
+⍝   or: dyalog sample-scripts/09-word-count.apls path/to/other.txt
+
+args←2⎕NQ'.' 'GetCommandLineArgs'       ⍝ script path, then any arguments
+here←⊃1⎕NPARTS⊃args                      ⍝ folder this script is in
+file←{1<≢⍵:2⊃⍵ ⋄ here,'poem.txt'}args
+
+text←⎕C⊃⎕NGET file                       ⍝ whole file, lower case
+words←((text∊⎕C ⎕A)⊆text)               ⍝ runs of letters = words
+⎕←'file: ',file
+⎕←'words: ',(⍕≢words),'   unique: ',⍕≢∪words
+
+counts←words{⍺,≢⍵}⌸words
+top←5↑counts[⍒counts[;2];]
+⎕←'top 5:'
+⎕←↑⊃¨{(10↑⍺),⍕⍵}/¨↓top

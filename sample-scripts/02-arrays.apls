@@ -1,0 +1,13 @@
+⍝ 02 · Arrays: reshape, index, take/drop, rotate, transpose
+⍝ Run:  dyalog sample-scripts/02-arrays.apls
+
+m←3 4⍴⍳12
+⎕←'m←3 4⍴⍳12' ⋄ ⎕←m
+⎕←'shape: ',⍕⍴m
+⎕←'row 2: ',⍕m[2;]
+⎕←'column 3: ',⍕m[;3]
+⎕←'transpose:' ⋄ ⎕←⍉m
+⎕←'first 2 rows, last 2 columns:' ⋄ ⎕←2 ¯2↑m
+⎕←'reverse each row:' ⋄ ⎕←⌽m
+⎕←'sum of each row: ',⍕+/m
+⎕←'sum of each column: ',⍕+⌿m

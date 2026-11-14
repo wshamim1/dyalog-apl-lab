@@ -4,10 +4,15 @@
 #
 # Usage:
 #   dyalog                 APL session in this terminal; current folder at /app
+#   dyalog FILE.apls       run an APL script (top to bottom), then exit
+#   dyalog FILE.aplf       start a session with that function loaded
+#                          (a function without arguments runs straight away)
 #   dyalog ride            serve RIDE on localhost:4502 (connect RIDE to it)
 #   dyalog pull            update the Dyalog image
 #   dyalog setup           install/start Podman (or Docker) and pull the image
 #   dyalog help
+#
+# In scripts only ⎕← output is printed: write ⎕←'hello', not just 'hello'.
 #
 # Env:
 #   DYALOG_ENGINE   podman or docker (default: podman if installed, else docker)
@@ -35,13 +40,47 @@ if [ -z "${DYALOG_ENGINE:-}" ]; then
   fi
 fi
 
-run() { ENGINE="$DYALOG_ENGINE" SELF=dyalog MOUNT_DIR="$PWD" exec "$HERE/container.sh" "$@"; }
+die() { printf '\033[1;31merror:\033[0m %s\n' "$*" >&2; exit 1; }
+
+# run <mount-dir> <container.sh args…>
+run() { local m="$1"; shift
+        ENGINE="$DYALOG_ENGINE" SELF=dyalog MOUNT_DIR="$m" exec "$HERE/container.sh" "$@"; }
+
+# For a file argument: mount the current folder if the file is inside it
+# (so the script can reach its neighbours), otherwise the file's own folder.
+# Sets MOUNT and INSIDE (the file's path inside the container).
+place_file() {
+  local f="$1" abs
+  [ -f "$f" ] || die "no such file: $f"
+  abs="$(cd "$(dirname "$f")" && pwd)/$(basename "$f")"
+  case "$abs" in
+    "$PWD"/*) MOUNT="$PWD"; INSIDE="/app/${abs#"$PWD"/}" ;;
+    *)        MOUNT="$(dirname "$abs")"; INSIDE="/app/$(basename "$abs")" ;;
+  esac
+}
 
 case "${1:-}" in
-  "")              run run ;;
-  ride)            run ride ;;
-  pull)            run pull ;;
-  setup|install)   run install ;;
-  -h|--help|help)  sed -n '2,18p' "$src" | sed 's/^# \{0,1\}//' ;;
-  *) echo "dyalog: unknown command '$1' (try: dyalog help)" >&2; exit 1 ;;
+  "")              run "$PWD" run ;;
+  ride)            run "$PWD" ride ;;
+  pull)            run "$PWD" pull ;;
+  setup|install)   run "$PWD" install ;;
+  -h|--help|help)  sed -n '2,24p' "$src" | sed 's/^# \{0,1\}//' ;;
+  *.apls|*.aplf|*.apln|*.aplc|*.dyalog)
+    place_file "$1"; shift
+    case "$INSIDE" in
+      *.apls) run "$MOUNT" script "$INSIDE" "$@" ;;
+      *)      [ $# -eq 0 ] || die "arguments are only supported for .apls scripts"
+              # A function file starts with a header (F←{…} or r←F y). If the
+              # first real line looks like a statement, it's really a script.
+              first="$(grep -v -E '^[[:space:]]*(⍝|$)' "$MOUNT/${INSIDE#/app/}" | head -n 1 || true)"
+              stmt_re="^[[:space:]]*['⎕0-9¯(]"
+              if [[ "$first" =~ $stmt_re ]]; then
+                printf '\033[1;33mhint:\033[0m %s starts with a statement (%s), so it looks like a script.\n      Rename it to .apls, and use ⎕← for anything you want printed.\n' \
+                  "$INSIDE" "$first" >&2
+              fi
+              run "$MOUNT" load "$INSIDE" ;;
+    esac
+    ;;
+  *) [ -f "$1" ] && die "don't know how to run '$1': use .apls for scripts, .aplf for functions"
+     die "unknown command '$1' (try: dyalog help)" ;;
 esac

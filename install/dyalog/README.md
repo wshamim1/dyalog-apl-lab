@@ -20,6 +20,8 @@ macOS is Apple Silicon only, so an Intel Mac can't run it.
 install/dyalog/install-cli.sh      # once: links `dyalog` into /usr/local/bin (or ~/.local/bin)
 
 dyalog                             # APL in this terminal; the current folder is at /app
+dyalog hello.apls                  # run an APL script top to bottom, then exit
+dyalog MyFn.aplf                   # session with MyFn loaded (runs it if it takes no arguments)
 dyalog ride                        # serve RIDE on localhost:4502, then connect RIDE to it
 dyalog setup                       # first time: install/start Podman, pull the image
 dyalog pull                        # update the image
@@ -30,6 +32,28 @@ dyalog pull                        # update the image
 | `DYALOG_ENGINE` | `podman` if installed, else `docker` | |
 | `IMAGE` | `docker.io/dyalog/dyalog` | use `localhost/dyalog-mysql:latest` for the [MySQL functions](../../integrations/mysql/apl/README.md) |
 | `RIDE_PORT` | `4502` | |
+
+### Running files
+
+| File | What it contains | `dyalog FILE` does |
+| --- | --- | --- |
+| `.apls` | **script**: statements, run top to bottom | runs it with `dyalogscript`, then exits with its exit code (0 = OK, 4 = APL error, or `⎕OFF n`) |
+| `.aplf` | **one function** (dfn or tradfn) | opens a session with it loaded. A function that takes no arguments runs right away. |
+
+**In a script, only `⎕←` lines print.** A bare expression is evaluated but not
+shown, unlike in the interactive session:
+
+```apl
+⍝ hello.apls
+⎕←'hello Shamim'          ⍝ prints
+'not shown'               ⍝ evaluated, not printed
+x←+/⍳100
+⎕←'sum: ',⍕x              ⍝ prints "sum: 5050"
+```
+
+If the file is inside the current folder, the current folder is mounted, so
+a script can read its neighbours (`⊃⎕NGET'/app/data.txt' 1`). Otherwise the
+file's own folder is mounted.
 
 Things to know:
 

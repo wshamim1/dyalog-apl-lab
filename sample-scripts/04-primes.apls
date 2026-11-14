@@ -1,0 +1,17 @@
+⍝ 04 · Prime numbers up to 100, two ways
+⍝ Run:  dyalog sample-scripts/04-primes.apls
+
+n←100
+
+⍝ 1. Count divisors: a number is prime when it has exactly 2.
+⍝    (⍳n)∘.|⍳n is a table of remainders; 0= marks divisors.
+p←(2=+⌿0=(⍳n)∘.|⍳n)/⍳n
+⎕←'primes ≤ ',(⍕n),':' ⋄ ⎕←p
+⎕←'how many: ',⍕≢p
+
+⍝ 2. Sieve of Eratosthenes, as a recursive dfn.
+Sieve←{0=≢⍵:⍬ ⋄ (⊃⍵),∇(0≠(⊃⍵)|⍵)/⍵}
+⎕←'same with a sieve? ',⍕p≡Sieve 1↓⍳n
+
+⍝ Twin primes: neighbours that differ by 2. (2-/p is p[i]-p[i+1], so ¯2.)
+⎕←'twin primes:' ⋄ ⎕←(¯2=2-/p)/2,/p

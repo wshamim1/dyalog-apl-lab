@@ -1,0 +1,20 @@
+⍝ 03 · FizzBuzz, two ways: with array operations and with a loop
+⍝ Run:  dyalog sample-scripts/03-fizzbuzz.apls
+
+n←⍳15
+
+⍝ Array version: choose a label per number with no loop.
+⍝ (1+(0=3|n)+2×0=5|n) is 1 plain, 2 Fizz, 3 Buzz, 4 FizzBuzz
+fb←{(1+(0=3|⍵)+2×0=5|⍵)⊃(⍕⍵)'Fizz' 'Buzz' 'FizzBuzz'}¨n
+⎕←'array version:' ⋄ ⎕←fb
+
+⍝ Loop version, with a control structure.
+⎕←'loop version:'
+:For i :In n
+    :Select 0=3 5|i
+    :Case 1 1 ⋄ ⎕←'FizzBuzz'
+    :Case 1 0 ⋄ ⎕←'Fizz'
+    :Case 0 1 ⋄ ⎕←'Buzz'
+    :Else ⋄ ⎕←i
+    :EndSelect
+:EndFor

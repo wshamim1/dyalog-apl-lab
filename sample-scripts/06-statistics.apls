@@ -1,0 +1,22 @@
+⍝ 06 · Statistics: mean, median, mode, standard deviation, a histogram
+⍝ Run:  dyalog sample-scripts/06-statistics.apls
+
+x←23 45 12 67 34 45 89 21 45 56 34 78
+Mean←{(+/⍵)÷≢⍵}
+Median←{s←⍵[⍋⍵] ⋄ n←≢⍵ ⋄ Mean s[(⌈n÷2),1+⌊n÷2]}
+Mode←{⊃⍸(⊢=⌈/)+⌿⍵∘.=∪⍵}   ⍝ index (into ∪⍵) of the most frequent
+SD←{(Mean(⍵-Mean ⍵)*2)*0.5}
+
+⎕←'data:   ',⍕x
+⎕←'mean:   ',⍕Mean x
+⎕←'median: ',⍕Median x
+⎕←'mode:   ',⍕(∪x)[Mode x]
+⎕←'sd:     ',⍕SD x
+⎕←'range:  ',⍕(⌊/x),⌈/x
+
+⍝ Text histogram in bins of 20: ⌸ (key) counts how many fall in each bin
+bins←20×⌊x÷20
+h←bins{⍺,≢⍵}⌸bins
+h←h[⍋h[;1];]
+⎕←'histogram:'
+⎕←↑⊃¨{(¯3↑⍕⍺),'-',(¯3↑⍕⍺+19),' │',⍵⍴'█'}/¨↓h   ⍝ /¨ reduces each row; ⊃¨ unwraps

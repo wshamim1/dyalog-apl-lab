@@ -1,0 +1,21 @@
+⍝ 05 · Strings: reverse, case, split, palindromes, a Caesar cipher
+⍝ Run:  dyalog sample-scripts/05-strings.apls
+
+s←'APL is a language for thinking about arrays'
+⎕←'reversed: ',⌽s
+⎕←'upper:    ',1 ⎕C s
+words←(' '≠s)⊆s
+⎕←'words: ',⍕≢words
+⎕←'longest: ',⊃words[⍒≢¨words]
+⎕←'each word reversed: ',1↓∊' ',¨⌽¨words
+⎕←'vowels: ',⍕+/s∊'aeiouAEIOU'
+
+IsPal←{w←⎕C ⍵∩⎕A,⎕C ⎕A ⋄ w≡⌽w}
+⎕←'palindromes:'
+⎕←↑{⍵,' → ',(1+IsPal ⍵)⊃'no' 'yes'}¨'racecar' 'A man, a plan, a canal: Panama' 'apl'
+
+⍝ Caesar cipher: shift each letter ⍺ places; other characters stay.
+Caesar←{a←⎕C ⎕A ⋄ i←a⍳⍵ ⋄ m←i≤26 ⋄ r←⍵ ⋄ r[⍸m]←a[1+26|⍺+¯1+m/i] ⋄ r}
+secret←3 Caesar 'attack at dawn'
+⎕←'encrypted: ',secret
+⎕←'decrypted: ',¯3 Caesar secret

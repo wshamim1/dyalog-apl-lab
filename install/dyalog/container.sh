@@ -138,6 +138,32 @@ case "${1:-}" in
     info "Serving RIDE on localhost:$RIDE_PORT. In RIDE choose Connect -> localhost:$RIDE_PORT"
     run_container -p "$RIDE_PORT:$RIDE_PORT" -e "RIDE_INIT=SERVE:*:$RIDE_PORT"
     ;;
+  script)   # script <path-inside-container> [args…]: run an APL script and exit
+    [ -n "${2:-}" ] || die "usage: $SELF script /app/file.apls"
+    have "$ENGINE" || die "$ENGINE not found. Run: $SELF install"
+    start_engine
+    ensure_image
+    shift
+    vol="$MOUNT_DIR:/app"
+    if [ "$ENGINE" = podman ] && [ "$(uname -s)" = Linux ]; then vol="$vol:Z"; fi
+    tty=(); [ -t 0 ] && [ -t 1 ] && tty=(-t)
+    # dyalogscript ends lines with \r\n on a terminal but a bare \r otherwise.
+    # Normalise both to \n (awk also adds a missing final newline), and keep
+    # dyalogscript's exit code.
+    # shellcheck disable=SC2046
+    "$ENGINE" run -i ${tty[@]+"${tty[@]}"} --rm $(platform_args) -v "$vol" -w /app \
+      --entrypoint dyalogscript "$IMAGE" "$@" \
+      | awk '{ sub(/\r$/, ""); gsub(/\r/, "\n"); print }'
+    exit "${PIPESTATUS[0]}"
+    ;;
+  load)     # load <path-inside-container>: session with that file loaded
+    [ -n "${2:-}" ] || die "usage: $SELF load /app/MyFn.aplf"
+    have "$ENGINE" || die "$ENGINE not found. Run: $SELF install"
+    start_engine
+    ensure_image
+    info "Loading $2 (functions without arguments run straight away). Exit with )off"
+    run_container -e "LOAD=$2"
+    ;;
   ""|-h|--help) usage ;;
   *) usage; exit 1 ;;
 esac

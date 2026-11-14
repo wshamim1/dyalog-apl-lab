@@ -1,0 +1,20 @@
+⍝ 10 · Sales report from a CSV file (reads sales.csv next to this script)
+⍝ Run:  dyalog sample-scripts/10-csv-report.apls
+
+here←⊃1⎕NPARTS⊃2⎕NQ'.' 'GetCommandLineArgs'
+t←⎕CSV(here,'sales.csv')'' 4 1           ⍝ 4: numbers as numbers; 1: header row
+(data header)←t
+⎕←'columns: ',⍕header
+⎕←'rows: ',⍕≢data
+
+(region product qty price)←↓⍉data
+amount←qty×price
+
+⎕←'total revenue: ',⍕+/amount
+⎕←'revenue by region (⌸):'
+r←region{⍺,(≢⍵),+/⍵}⌸amount
+r←r[⍒r[;3];]                             ⍝ biggest first
+⎕←↑{(8↑⊃⍵),(¯4↑⍕2⊃⍵),' orders ',(¯10↑⍕3⊃⍵)}¨↓r
+
+p←product{⍺,+/⍵}⌸qty
+⎕←'best-selling product: ',⊃p[⊃⍒p[;2];]
