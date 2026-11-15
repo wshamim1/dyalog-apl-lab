@@ -1,0 +1,52 @@
+⍝ Create the sample component files in data/ (overwrites them).
+⍝ Run:  dyalog sample-scripts/component-files/make-data.apls
+⍝
+⍝ Three files, in styles real legacy systems use:
+⍝   customers.dcf  header text, field names, then one record per component
+⍝   orders.dcf     one order per component, stored as a namespace with a
+⍝                  nested matrix of line items inside
+⍝   settings.dcf   a key/value table, a numeric matrix, a boolean vector
+here←⊃1⎕NPARTS⊃2⎕NQ'.' 'GetCommandLineArgs'
+dir←here,'data/'
+New←{⎕NEXISTS f←dir,⍵,'.dcf':⎕NDELETE f ⋄ 0}  ⍝ start fresh
+
+⍝ customers.dcf ─────────────────────────────────────────────
+{}New'customers'
+t←(dir,'customers')⎕FCREATE 0
+{}'Customer master · version 1'⎕FAPPEND t
+{}('id' 'name' 'city' 'credit_limit' 'joined')⎕FAPPEND t
+names←'Ann' 'Bob' 'Zoë' 'José' 'Priya' 'Wei' 'Olu' 'Mia' 'Lars' 'Aiko'
+cities←'London' 'Paris' 'Berlin' 'Madrid' 'Mumbai' 'Beijing' 'Lagos' 'Rome' 'Oslo' 'Tokyo'
+:For i :In ⍳10
+    {}(i(i⊃names)(i⊃cities)(1000×1+5|3×i)('2024-',(¯2↑'0',⍕1+12|5×i),'-',¯2↑'0',⍕1+27|7×i))⎕FAPPEND t
+:EndFor
+⎕FUNTIE t
+
+⍝ orders.dcf ────────────────────────────────────────────────
+{}New'orders'
+t←(dir,'orders')⎕FCREATE 0
+products←'Widget' 'Gadget' 'Gizmo' 'Doohickey'
+prices←4.99 19.99 49 14.5
+:For i :In ⍳25
+    o←⎕NS''
+    o.id←1000+i
+    o.customer←1+10|7×i
+    o.date←'2026-0',(⍕1+⌊(i-1)÷5),'-',¯2↑'0',⍕1+27|11×i
+    o.status←(1+3|i)⊃'open' 'paid' 'shipped'
+    n←1+3|i+⌊i÷4                               ⍝ 1–3 lines per order
+    p←1+4|i+⍳n
+    o.lines←(products[p]),(1+9|i×⍳n),[1.5]prices[p]   ⍝ product qty price
+    {}o ⎕FAPPEND t
+:EndFor
+⎕FUNTIE t
+
+⍝ settings.dcf ──────────────────────────────────────────────
+{}New'settings'
+t←(dir,'settings')⎕FCREATE 0
+{}(4 2⍴'currency' 'GBP' 'vat' 0.2 'regions'('North' 'South' 'East' 'West')'version' 3)⎕FAPPEND t
+{}(3 12⍴100×1+7|⍳36)⎕FAPPEND t                ⍝ monthly sales: 3 years × 12 months
+{}(0=3|⍳100)⎕FAPPEND t                         ⍝ 100 flags (booleans)
+⎕FUNTIE t
+
+⎕←'Created in ',dir,':'
+⎕←↑{f←dir,⍵,'.dcf' ⋄ t←f ⎕FTIE 0 ⋄ s←⎕FSIZE t ⋄ _←⎕FUNTIE t ⋄ (⍵,'.dcf'),' · ',(⍕¯1+2⊃s),' components · ',(⍕3⊃s),' bytes'}¨'customers' 'orders' 'settings'

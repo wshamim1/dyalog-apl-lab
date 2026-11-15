@@ -1,0 +1,16 @@
+⍝ Use the data-access layer instead of ⎕F… calls (read-only demo).
+⍝ Run:  dyalog sample-scripts/component-files/use-store.apls
+here←⊃1⎕NPARTS⊃2⎕NQ'.' 'GetCommandLineArgs'
+{}⎕FIX'file://',here,'Store.apln'
+Store.Open here,'data'
+
+c←Store.Customers
+⎕←'customers: ',⍕c.name
+z←Store.Customer 3
+⎕←z.name,' lives in ',z.city,', credit limit ',⍕z.credit_limit
+o←Store.OrdersFor 8
+z←Store.Customer 8
+⎕←'customer 8 (',z.name,') has ',(⍕≢o),' orders: ',⍕o.id
+⎕←'their total: ',⍕+/{+/×/⍵[;2 3]}¨o.lines
+⍝ Nothing above mentions files or component numbers: swap Store's insides
+⍝ for SQL and this script keeps working.

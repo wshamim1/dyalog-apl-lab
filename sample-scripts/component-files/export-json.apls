@@ -1,0 +1,36 @@
+⍝ Migration step 2: export every component to JSON lines, in export/.
+⍝ Run:  dyalog sample-scripts/component-files/export-json.apls
+⍝ One line per component:  {"file":"orders","component":3,"value":{…}}
+⍝ Also writes export/checks.json: counts and totals computed here in APL,
+⍝ so the loader can check the database got exactly the same data.
+here←⊃1⎕NPARTS⊃2⎕NQ'.' 'GetCommandLineArgs'
+dir←here,'data/' ⋄ out←here,'export/'
+{}3 ⎕MKDIR out
+J←{1(⎕JSON⍠'HighRank' 'Split')⍵}               ⍝ matrices → lists of rows
+(names types)←0 1(⎕NINFO⍠1)dir,'*.dcf'
+:For f :In names[⍋names]
+    name←2⊃⎕NPARTS f
+    t←f ⎕FTIE 0
+    (first next)←2↑⎕FSIZE t
+    lines←{
+        o←⎕NS''
+        o.(file component)←name ⍵
+        o.value←⎕FREAD t ⍵
+        J o
+    }¨first+¯1+⍳next-first
+    (⊂lines)⎕NPUT(out,name,'.jsonl')1
+    ⎕FUNTIE t
+    ⎕←'export/',name,'.jsonl: ',(⍕≢lines),' components'
+:EndFor
+
+⍝ Checks: what the database should contain afterwards
+t←(dir,'customers')⎕FTIE 0 ⋄ cust←⎕FREAD¨t,¨2+⍳¯3+2⊃⎕FSIZE t ⋄ ⎕FUNTIE t
+t←(dir,'orders')⎕FTIE 0 ⋄ ord←⎕FREAD¨t,¨⍳¯1+2⊃⎕FSIZE t ⋄ ⎕FUNTIE t
+c←⎕NS''
+c.customers←≢cust
+c.credit_total←+/4⊃¨cust
+c.orders←≢ord
+c.order_lines←+/≢¨ord.lines
+c.order_value←(⌊0.5+100×+/{+/×/⍵[;2 3]}¨ord.lines)÷100
+(⊂J c)⎕NPUT(out,'checks.json')1
+⎕←'export/checks.json: ',J c

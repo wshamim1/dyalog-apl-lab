@@ -1,0 +1,27 @@
+⍝ Migration step 1: inventory. What's in every component of every file?
+⍝ Run:  dyalog sample-scripts/component-files/inventory.apls
+⍝ Kinds decide the database design: tables → SQL tables, nested → JSON
+⍝ columns. "JSON ok" says whether ⎕JSON can export it as is.
+here←⊃1⎕NPARTS⊃2⎕NQ'.' 'GetCommandLineArgs'
+dir←here,'data/'
+Kind←{
+    9=⎕NC⊂'⍵':'namespace'
+    (0=10|⎕DR ⍵)∧1≥|≡⍵:'text'
+    (11=⎕DR ⍵)∧1=|≡⍵:'boolean ',⍕⍴⍵
+    1=|≡⍵:'numeric ',⍕⍴⍵
+    'nested ',⍕⍴⍵
+}
+JsonOK←{0::'NO' ⋄ _←1(⎕JSON⍠'HighRank' 'Split')⍵ ⋄ 'yes'}
+(names types)←0 1(⎕NINFO⍠1)dir,'*.dcf'
+rows←⍬
+:For f :In names[⍋names]
+    t←f ⎕FTIE 0
+    (first next)←2↑⎕FSIZE t
+    :For n :In first+¯1+⍳next-first        ⍝ first, first+1, …, next-1
+        v←⎕FREAD t n
+        rows,←⊂(2⊃⎕NPARTS f)n(Kind v)(⊃⎕FRDCI t n)(JsonOK v)
+    :EndFor
+    ⎕FUNTIE t
+:EndFor
+⎕←↑(⊂'file' 'comp' 'kind' 'bytes' 'JSON ok'),rows
+⎕←'' ⋄ ⎕←(⍕≢rows),' components in ',(⍕≢names),' files'

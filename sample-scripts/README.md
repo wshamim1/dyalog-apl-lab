@@ -23,6 +23,10 @@ dyalog sample-scripts/04-primes.apls
 
 All outputs were checked against the same calculations in Python.
 
+**Component files:** [component-files/](component-files/README.md) has sample
+`.dcf` data files and a working migration path: inventory, JSON export, load
+into SQL, verify, and a data-access layer.
+
 **Other file types:** [file-types/](file-types/README.md) has one example of each
 Dyalog file type (`.aplf .aplo .apln .aplc .apli .apla .dyapp .dws`) and
 shows how to run and load them.

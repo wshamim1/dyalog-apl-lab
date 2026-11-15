@@ -1,0 +1,28 @@
+⍝ A tour of reading component files.
+⍝ Run:  dyalog sample-scripts/component-files/read-data.apls
+here←⊃1⎕NPARTS⊃2⎕NQ'.' 'GetCommandLineArgs'
+dir←here,'data/'
+
+⍝ Tie (open) a file: you get a tie number, used by every other ⎕F… function
+t←(dir,'customers')⎕FTIE 0
+(first next bytes)←3↑⎕FSIZE t           ⍝ components are numbered first…next-1
+⎕←'customers.dcf: components ',(⍕first),' to ',(⍕next-1),', ',(⍕bytes),' bytes'
+⎕←'1: ',⎕FREAD t 1                       ⍝ header text
+fields←⎕FREAD t 2                        ⍝ field names
+recs←⎕FREAD¨t,¨2+⍳next-3                 ⍝ every record: ⎕FREAD t n for each n
+⎕←'' ⋄ ⎕←fields⍪↑recs                    ⍝ records as a table, field names on top
+⎕←'' ⋄ ⎕←'total credit limit: ',⍕+/4⊃¨recs
+⍝ ⎕FRDCI: who wrote a component, and when (in 60ths of a second since 1970)
+(size user time)←⎕FRDCI t 3
+⎕←'component 3: ',(⍕size),' bytes, written by user ',⍕user
+⎕FUNTIE t
+
+⍝ Orders: each component is a whole namespace
+t←(dir,'orders')⎕FTIE 0
+o←⎕FREAD t 1
+⎕←'' ⋄ ⎕←'order ',(⍕o.id),' for customer ',(⍕o.customer),' on ',o.date,' (',o.status,'):'
+⎕←o.lines
+orders←⎕FREAD¨t,¨⍳¯1+2⊃⎕FSIZE t
+⎕←'orders: ',(⍕≢orders),' · total value: ',⍕+/{+/×/⍵[;2 3]}¨orders.lines
+⎕←'by status:' ⋄ ⎕←{⍺,≢⍵}⌸orders.status
+⎕FUNTIE t

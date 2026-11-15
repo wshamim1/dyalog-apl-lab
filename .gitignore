@@ -13,3 +13,6 @@ __pycache__/
 .venv/
 
 
+
+# Personal notes (not committed)
+/migration.md

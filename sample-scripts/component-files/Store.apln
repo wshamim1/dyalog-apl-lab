@@ -1,0 +1,69 @@
+:Namespace Store
+⍝ Migration step 5: a data-access layer.
+⍝
+⍝ The rest of an application calls Store.Customers, Store.Orders, … and never
+⍝ ⎕FREAD/⎕FAPPEND directly. Today these functions read component files.
+⍝ To move to SQL, rewrite only the bodies below (e.g. with SQAPL, like
+⍝ integrations/mysql/apl): every caller keeps working unchanged.
+⍝
+⍝   Store.Open '/app/sample-scripts/component-files/data'
+⍝   c←Store.Customers          ⍝ namespaces: id name city credit_limit joined
+⍝   (Store.Customer 3).name
+⍝   o←Store.OrdersFor 8
+⍝   Store.AddOrder order       ⍝ appends safely (holds the file while writing)
+⍝
+⍝ Callers get namespaces, not storage details: they don't know or care that a
+⍝ customer is component n of customers.dcf.
+
+    ⎕IO←1 ⋄ ⎕ML←1
+    Folder←''
+
+    ∇ Open folder
+    ⍝ Where the data files are
+      Folder←folder,('/'≠⊃⌽folder)/'/'
+    ∇
+
+    ∇ r←Customers;t;fields;recs
+    ⍝ Every customer, as a namespace per customer
+      t←Tie'customers'
+      fields←⎕FREAD t 2
+      recs←⎕FREAD¨t,¨2+⍳¯3+2⊃⎕FSIZE t
+      {}⎕FUNTIE t
+      r←fields∘Record¨recs
+    ∇
+
+    ∇ c←Customer id;all
+    ⍝ One customer by id (DOMAIN ERROR if there's no such customer)
+      all←Customers
+      :If ~(⊂id)∊all.id
+          ⎕SIGNAL⊂('EN' 11)('Message'('No customer ',⍕id))
+      :EndIf
+      c←⊃all/⍨all.id=id
+    ∇
+
+    ∇ r←Orders;t
+    ⍝ Every order (each was stored as a namespace)
+      t←Tie'orders'
+      r←⎕FREAD¨t,¨⍳¯1+2⊃⎕FSIZE t
+      {}⎕FUNTIE t
+    ∇
+
+    ∇ r←OrdersFor customer;all
+    ⍝ The orders of one customer
+      all←Orders
+      r←all/⍨all.customer=customer
+    ∇
+
+    ∇ n←AddOrder order;t
+    ⍝ Append an order. ⎕FHOLD stops two writers from clashing; in SQL this
+    ⍝ becomes a transaction. Returns the new component number.
+      t←Tie'orders'
+      ⎕FHOLD t
+      n←order ⎕FAPPEND t
+      ⎕FHOLD ⍬
+      {}⎕FUNTIE t
+    ∇
+
+    Tie←{(Folder,⍵)⎕FTIE 0}
+    Record←{n←⎕NS'' ⋄ _←⍺{n⍎⍺,'←⍵'}¨⍵ ⋄ n}     ⍝ field names, values → namespace
+:EndNamespace
