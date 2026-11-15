@@ -32,12 +32,16 @@ The example files are in this folder. Load them all at once:
 
 ```apl
       ]load /app/tutorials/11-tradfns-and-control/*.aplf
-┌───────┬────────┬─────┬───────┬─────┐
-│Collatz│FizzBuzz│Grade│SafeDiv│Stats│
-└───────┴────────┴─────┴───────┴─────┘
+┌───────┬────────┬─────┬───────┬─────┬────────────┬──────────┬────────────┬──────────┐
+│Collatz│FizzBuzz│Grade│SafeDiv│Stats│Collatz_test│Grade_test│SafeDiv_test│Stats_test│
+└───────┴────────┴─────┴───────┴─────┴────────────┴──────────┴────────────┴──────────┘
       Stats 4 8 15 16 23 42
 18 4 42
 ```
+
+The wildcard also looks in subfolders, so it loads the tests in `tests/` too
+(the `*_test` names). That's harmless: they're ordinary functions you could
+run yourself, e.g. `Stats_test`.
 
 To create or edit one interactively, type `)ed Name` in RIDE.
 

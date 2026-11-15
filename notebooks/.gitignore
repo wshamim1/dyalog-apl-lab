@@ -1,0 +1,4 @@
+# Dyalog's notebooks, downloaded by: install/jupyter/jupyter.sh fetch-dyalog
+/dyalog/
+# Jupyter scratch files
+.ipynb_checkpoints/

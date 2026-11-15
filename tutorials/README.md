@@ -19,6 +19,9 @@ type in and exercises with solutions.
 | 10 | [Workspaces and files](10-workspaces-files/README.md) | `)save`, `]load`, `⎕NGET ⎕NPUT ⎕CSV ⎕JSON`, `⎕IO` |
 | 11 | [Tradfns and control](11-tradfns-and-control/README.md) | headers, `:If :For :While :Select :Trap` |
 
+Prefer to run them as you read? The same lessons are in
+[notebooks/](../notebooks/README.md) as Jupyter notebooks.
+
 Keep the [glyph cheat sheet](../cheatsheet/README.md) open alongside: every
 glyph with its name, RIDE key, meanings and an example.
 

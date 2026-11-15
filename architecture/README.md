@@ -57,6 +57,7 @@ they sit in different places:
 | Tests | `dyalog test` | `dyalogscript` + Tester | checking `*_test.aplf` | [testing](../testing/README.md) |
 | RIDE | `dyalog ride`, then RIDE → Connect | RIDE server · TCP 4502 | editing and debugging | [install/ride](../install/ride/README.md) |
 | Python tools | `dyalog_client.py` | RIDE server · TCP 4502 | Streamlit + OpenAI app, MySQL bridge | [dyalog_ride](../integrations/dyalog_ride/README.md) |
+| Jupyter notebooks | `install/jupyter/jupyter.sh start` | the kernel starts its own Dyalog in that container and talks RIDE to it | learning in runnable notebooks | [notebooks](../notebooks/README.md) |
 | HTTP API | `integrations/jarvis/serve.sh` | Jarvis · HTTP 8080 | other apps calling your functions | [jarvis](../integrations/jarvis/README.md) |
 | MySQL from APL | `]load …/MySQL*.aplf` | SQAPL → ODBC → MySQL :3307 | queries from inside APL | [mysql/apl](../integrations/mysql/apl/README.md) |
 | Kafka from APL | `integrations/kafka/kafka.sh run …` | Kafka client → broker :19092 | producing and consuming event streams | [kafka](../integrations/kafka/README.md) |

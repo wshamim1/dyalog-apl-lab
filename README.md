@@ -25,6 +25,7 @@ explanation.
 | | |
 | --- | --- |
 | 📚 **[Tutorials](tutorials/README.md)** | 12 lessons from first steps to classes and control structures, each with exercises and solutions. Every output shown was produced by Dyalog 21. |
+| 📓 **[Jupyter notebooks](notebooks/README.md)** | The tutorials as runnable notebooks in JupyterLab (Dyalog kernel), plus Dyalog's own 44 |
 | 🔣 **[Glyph cheat sheet](cheatsheet/README.md)** | What a glyph is, how to type each one, and every glyph with its meanings and a real example |
 | 📜 **[Sample scripts](sample-scripts/README.md)** | Small runnable programs: primes, strings, statistics, Game of Life, a CSV report… |
 | 🗂️ **[File types](sample-scripts/file-types/README.md)** | One example of each Dyalog file type: `.apls .aplf .aplo .apln .aplc .apli .apla .dyapp .dws` |
@@ -65,6 +66,14 @@ or run a sample:
 ```sh
 dyalog sample-scripts/08-life.apls       # Conway's Game of Life in one line of APL
 ```
+
+### Prefer notebooks?
+
+```sh
+install/jupyter/jupyter.sh build && install/jupyter/jupyter.sh start
+```
+
+Open the link it prints. The tutorials are in [notebooks/](notebooks/README.md).
 
 ### Prefer an editor window?
 
@@ -136,6 +145,7 @@ dyalog ride                                                   # terminal 1
 
 ```
 tutorials/              12 lessons (00–11) with exercises: start here
+notebooks/              the same lessons as Jupyter notebooks (built from tutorials/)
 architecture/           how everything connects (diagram + explanation)
 cheatsheet/             every glyph: name, RIDE key, meanings, examples (built by build.py)
 sample-scripts/         runnable .apls programs, plus poem.txt and sales.csv data
@@ -150,6 +160,7 @@ integrations/
     apl/                MySQL ↔ APL from APL (SQAPL), plus Dockerfile for the ODBC driver
 install/
   dyalog/               ways to run Dyalog: the `dyalog` command, Mac app, Docker, Podman
+  jupyter/              JupyterLab + Dyalog kernel image (jupyter.sh start)
   ride/                 build and run the RIDE editor from source
 ```
 

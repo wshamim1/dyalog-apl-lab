@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1150" viewBox="0 0 1150 1000" role="img" aria-label="One Dyalog interpreter runs in a container. A terminal connects to its session; RIDE and the Python dyalog_ride client connect to its RIDE server on TCP 4502; HTTP clients call Jarvis, which runs inside the workspace and calls your code; SQAPL inside the workspace reaches MySQL over ODBC; the repo folder is mounted at /app.">
+<svg xmlns="http://www.w3.org/2000/svg" width="1150" viewBox="0 0 1150 1020" role="img" aria-label="One Dyalog interpreter runs in a container. A terminal connects to its session; RIDE and the Python dyalog_ride client connect to its RIDE server on TCP 4502; HTTP clients call Jarvis, which runs inside the workspace and calls your code; SQAPL inside the workspace reaches MySQL over ODBC; the repo folder is mounted at /app.">
           <defs>
             <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
             <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-hot" d="M0,0 L10,5 L0,10 z"/></marker>
@@ -145,6 +145,23 @@
           <text class="s" x="1025" y="864" text-anchor="middle">topics: orders · stats</text>
           <path class="wire" d="M816,850 H928" marker-start="url(#a)" marker-end="url(#a)"/>
           <text class="lab" x="899" y="842" text-anchor="middle">:19092</text>
+
+          <!-- Jupyter: a separate container with its own Dyalog -->
+          <rect class="box" x="40" y="770" width="260" height="44" rx="8"/>
+          <text class="t" x="170" y="790" text-anchor="middle">Browser</text>
+          <text class="s" x="170" y="806" text-anchor="middle">notebooks UI</text>
+          <rect class="region" x="20" y="830" width="300" height="180" rx="12"/>
+          <text class="regionlab" x="36" y="852">JUPYTER CONTAINER</text>
+          <rect class="box" x="40" y="862" width="260" height="50" rx="8"/>
+          <text class="t" x="170" y="882" text-anchor="middle">JupyterLab + Dyalog kernel</text>
+          <text class="s" x="170" y="899" text-anchor="middle">notebooks/ · :8888</text>
+          <rect class="interp" x="40" y="946" width="260" height="50" rx="8"/>
+          <text class="t" x="170" y="966" text-anchor="middle">its own Dyalog APL 21</text>
+          <text class="s" x="170" y="983" text-anchor="middle">runs the notebook cells</text>
+          <path class="wire" d="M170,814 V860" marker-end="url(#a)"/>
+          <text class="lab" x="178" y="842">HTTP :8888</text>
+          <path class="wire" d="M170,912 V944" marker-end="url(#a)"/>
+          <text class="lab" x="178" y="933">RIDE</text>
 
           <!-- Right side: MySQL and the repo folder -->
           <rect class="box" x="930" y="440" width="190" height="56" rx="8"/>

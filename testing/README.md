@@ -30,6 +30,10 @@ my-code/
     More_test.aplf        ← or in tests/ (code comes from my-code/)
 ```
 
+Note that `]load folder/*.aplf` also loads matching files from subfolders,
+so it loads the tests in `tests/` too. That's harmless: they're just extra
+functions in the workspace.
+
 A test is a function with no arguments that makes some checks:
 
 ```apl
