@@ -11,6 +11,7 @@
 #   dyalog FILE.apla       display the array in an array-notation file
 #   dyalog FILE.dws        open a saved workspace (runs its ⎕LX)
 #   dyalog FILE.dyapp      start an app definition (Load …/Run … lines)
+#   dyalog test [PATH]     run *_test.aplf tests under PATH (default: here)
 #   dyalog ride            serve RIDE on localhost:4502 (connect RIDE to it)
 #   dyalog pull            update the Dyalog image
 #   dyalog setup           install/start Podman (or Docker) and pull the image
@@ -63,12 +64,28 @@ place_file() {
   esac
 }
 
+# Tests: the framework lives in <repo>/testing (Tester.apln, run-tests.apls)
+TESTING="$(cd "$HERE/../.." && pwd)/testing"
+
 case "${1:-}" in
   "")              run "$PWD" run ;;
+  test)            # dyalog test [folder|file]
+    target="${2:-.}"
+    [ -e "$target" ] || die "no such file or folder: $target"
+    [ -f "$TESTING/run-tests.apls" ] || die "test framework not found in $TESTING"
+    if [ -d "$target" ]; then abs="$(cd "$target" && pwd)"
+    else abs="$(cd "$(dirname "$target")" && pwd)/$(basename "$target")"; fi
+    case "$abs" in
+      "$PWD")   MOUNT="$PWD"; INSIDE="/app" ;;
+      "$PWD"/*) MOUNT="$PWD"; INSIDE="/app/${abs#"$PWD"/}" ;;
+      *) if [ -d "$abs" ]; then MOUNT="$abs"; INSIDE="/app"
+         else MOUNT="$(dirname "$abs")"; INSIDE="/app/$(basename "$abs")"; fi ;;
+    esac
+    EXTRA_MOUNT="$TESTING:/apl-test:ro" run "$MOUNT" script /apl-test/run-tests.apls "$INSIDE" ;;
   ride)            run "$PWD" ride ;;
   pull)            run "$PWD" pull ;;
   setup|install)   run "$PWD" install ;;
-  -h|--help|help)  sed -n '2,28p' "$src" | sed 's/^# \{0,1\}//' ;;
+  -h|--help|help)  sed -n '2,29p' "$src" | sed 's/^# \{0,1\}//' ;;
   *.apls|*.apla|*.aplf|*.aplo|*.apln|*.aplc|*.apli|*.dyalog|*.dws|*.dyapp)
     place_file "$1"; shift
     case "$INSIDE" in

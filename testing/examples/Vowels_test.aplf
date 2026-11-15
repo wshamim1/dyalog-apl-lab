@@ -1,0 +1,8 @@
+ Vowels_test
+⍝ Tests for Vowels.aplf, next to this file. Each line is one check.
+ 3 ExpectEq Vowels'Hello World'
+ 0 ExpectEq Vowels'rhythm'
+ 0 ExpectEq Vowels''                ⍝ empty string
+ 5 ExpectEq Vowels'AEIOU'           ⍝ upper case counts too
+ ExpectTrue 0≤Vowels'xyz'
+ 11 ExpectError'Vowels 42'          ⍝ a number isn't text: DOMAIN ERROR (11)

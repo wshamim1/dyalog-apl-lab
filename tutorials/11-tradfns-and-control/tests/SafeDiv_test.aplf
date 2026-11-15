@@ -1,0 +1,5 @@
+ SafeDiv_test
+⍝ SafeDiv.aplf (:Trap): division that returns 0 instead of DOMAIN ERROR
+ 5 ExpectEq 10 SafeDiv 2
+ 0 ExpectEq 10 SafeDiv 0
+ ExpectFalse 0≠1 SafeDiv 0

@@ -1,0 +1,7 @@
+ Counter_test;a;b
+⍝ Counter.aplc: each object has its own Total; Created is shared
+ a←⎕NEW Counter ⋄ b←⎕NEW Counter
+ a.Add¨5 2 ⋄ b.Add 10
+ 7 ExpectEq a.Total
+ 10 ExpectEq b.Total
+ 2 ExpectEq Counter.Created

@@ -1,0 +1,5 @@
+ Data_test
+⍝ .apla files become variables named after the file: Grid, People
+ (3 3⍴⍳9)ExpectEq Grid
+ 'Ann' 'Bob' 'Cy'ExpectEq People.name
+ 32 ExpectEq(+/People.age)÷≢People

@@ -21,6 +21,9 @@ Each file holds **one thing**, named after that thing (`Avg.aplf` defines
 | `demo.dws` | `.dws` workspace | binary, saved by the script above (not committed) | opens it and runs its `⎕LX` |
 | [use-all.apls](use-all.apls) | `.apls` script | loads one file of each type and uses it | runs it, then exits |
 
+Tests for these files are in [tests/](tests). Run them with
+`dyalog test sample-scripts/file-types`.
+
 ## Try it
 
 ```sh

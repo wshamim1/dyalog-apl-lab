@@ -1,0 +1,4 @@
+ Stats_test
+⍝ Stats.aplf: mean, minimum, maximum
+ (18 4 42)ExpectEq Stats 4 8 15 16 23 42
+ (5 5 5)ExpectEq Stats,5

@@ -1,0 +1,7 @@
+ Vowels←{
+     ⍝ Count the vowels in a string (either case).
+     ⍝   Vowels 'Hello World'   →   3
+     ⍝ Anything that isn't text is a DOMAIN ERROR (11), via ⎕SIGNAL.
+     0≠10|⎕DR ⍵:'Vowels: text expected'⎕SIGNAL 11
+     +/(⎕C ⍵)∊'aeiou'
+ }

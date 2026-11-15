@@ -1,0 +1,16 @@
+⍝ Test runner used by `dyalog test`. Runs Tester.Run on a folder or file and
+⍝ exits with 0 (all passed), 1 (failures or errors) or 2 (runner problem).
+⍝   dyalogscript run-tests.apls [/app/path]
+args←2⎕NQ'.' 'GetCommandLineArgs'
+here←⊃1⎕NPARTS⊃args
+path←{1<≢⍵:2⊃⍵ ⋄ '/app'}args
+:Trap 0
+    {}⎕FIX'file://',here,'Tester.apln'
+    code←Tester.Run path
+:Else
+    ⎕←'dyalog test: ',⎕DMX.EM,(×≢⎕DMX.Message)/': ',⎕DMX.Message
+    code←2
+:EndTrap
+⍝ Keep ⎕OFF on its own line: `⎕OFF expression` on one line exits before
+⍝ the expression runs.
+⎕OFF code

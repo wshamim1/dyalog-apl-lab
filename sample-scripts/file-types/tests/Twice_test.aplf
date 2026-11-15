@@ -1,0 +1,5 @@
+ Twice_test
+⍝ Twice.aplo is an operator: it takes a function on its left
+ 12 ExpectEq(1∘+)Twice 10
+ 'abc'ExpectEq⌽Twice'abc'        ⍝ reversing twice gives it back
+ 16 ExpectEq(×⍨)Twice 2           ⍝ (2×2)×(2×2)

@@ -1,0 +1,6 @@
+ Hyp_test
+⍝ Hyp.aplf: hypotenuse, with a default left argument of 1
+ 5 ExpectEq 3 Hyp 4
+ 13 ExpectEq 5 Hyp 12
+ (2*0.5)ExpectNear Hyp 1          ⍝ default ⍺←1
+ 5 10 ExpectEq 3 6 Hyp 4 8        ⍝ works on arrays too

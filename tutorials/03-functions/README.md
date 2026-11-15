@@ -160,3 +160,8 @@ each item separately, use `¨` (each):
 </details>
 
 **Next:** [04 · Operators](../04-operators/README.md)
+
+## Tests
+
+The functions in this folder have tests in [tests/](tests). Run them with
+`dyalog test tutorials/03-functions` (see [testing](../../testing/README.md)).

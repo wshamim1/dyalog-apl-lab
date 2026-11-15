@@ -1,0 +1,6 @@
+ Shapes_test
+⍝ Square.aplc and Circle.aplc implement the Shape.apli interface.
+⍝ The runner loads the interface first, so both classes load.
+ 9 ExpectEq(⎕NEW Square 3).Area
+ (○4)ExpectNear(⎕NEW Circle 2).Area
+ 'square' 'circle'ExpectEq{⍵.Name}¨(⎕NEW Square 1)(⎕NEW Circle 1)

@@ -1,0 +1,6 @@
+ Mean_test
+⍝ Mean.aplf
+ 2.5 ExpectEq Mean 1 2 3 4
+ 7 ExpectEq Mean 7               ⍝ a single number
+ ExpectTrue 3=Mean 3 3 3
+ 1 ExpectEq Mean ⍬               ⍝ surprise: (+/⍬)÷≢⍬ is 0÷0, which APL defines as 1

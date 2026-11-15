@@ -19,6 +19,7 @@ Python, OpenAI, Streamlit and MySQL.*
 | 📜 **[Sample scripts](sample-scripts/README.md)** | Small runnable programs: primes, strings, statistics, Game of Life, a CSV report… |
 | 🗂️ **[File types](sample-scripts/file-types/README.md)** | One example of each Dyalog file type: `.apls .aplf .aplo .apln .aplc .apli .apla .dyapp .dws` |
 | ⌨️ **[`dyalog` command](install/dyalog/README.md#the-dyalog-command)** | Run Dyalog and APL files from any folder, on any Mac (including Intel), using a container |
+| 🧪 **[Testing](testing/README.md)** | A small APL test framework: write `*_test.aplf` files, run `dyalog test` |
 | 🔌 **[Integrations](integrations/README.md)** | Drive Dyalog from Python, ask questions in plain English (OpenAI + Streamlit), read and write MySQL from Python or from APL itself |
 
 ## Quick start
@@ -77,6 +78,7 @@ dyalog Stats.apln         # session with a namespace loaded (calls its Run)
 dyalog Grid.apla          # display an array-notation file
 dyalog app.dyapp          # boot an app definition (Load … / Run … lines)
 dyalog demo.dws           # open a saved workspace
+dyalog test               # run all *_test.aplf tests here (see testing/)
 dyalog ride               # serve RIDE on port 4502
 dyalog help
 ```
@@ -123,7 +125,8 @@ dyalog ride                                                   # terminal 1
 ```
 tutorials/              12 lessons (00–11) with exercises: start here
 sample-scripts/         runnable .apls programs, plus poem.txt and sales.csv data
-  file-types/           one example of every Dyalog file type
+  file-types/           one example of every Dyalog file type (with tests/)
+testing/                the test framework (Tester.apln) and an example
 integrations/
   dyalog_ride/          Python RIDE-protocol client (stdlib only)
   streamlit_app/        English → APL web app (OpenAI) + REPL

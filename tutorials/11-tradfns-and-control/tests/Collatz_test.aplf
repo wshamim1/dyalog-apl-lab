@@ -1,0 +1,6 @@
+ Collatz_test
+⍝ Collatz.aplf (:While): steps to reach 1
+ 0 ExpectEq Collatz 1
+ 8 ExpectEq Collatz 6
+ 111 ExpectEq Collatz 27          ⍝ the famous long one
+ (0 1 7 2 5 8 16 3 19 6)ExpectEq Collatz¨⍳10

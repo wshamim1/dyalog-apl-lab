@@ -1,0 +1,7 @@
+ Fact_test
+⍝ Fact.aplf (recursive factorial), loaded from the folder above
+ 1 ExpectEq Fact 0
+ 1 ExpectEq Fact 1
+ 120 ExpectEq Fact 5
+ 3628800 ExpectEq Fact 10
+ (!10)ExpectEq Fact 10           ⍝ agrees with the built-in ! (factorial)

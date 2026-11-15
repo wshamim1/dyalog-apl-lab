@@ -1,0 +1,235 @@
+:Namespace Tester
+⍝ A small test framework for Dyalog APL.  Docs: testing/README.md
+⍝
+⍝ Put tests in files named Something_test.aplf, either next to the code
+⍝ they test or in a tests/ subfolder (then the code is loaded from the
+⍝ parent folder). A test is a function with no arguments (or a dfn):
+⍝
+⍝     ∇ Add_test
+⍝       5 ExpectEq 2 Add 3                ⍝ expected ExpectEq actual
+⍝       ExpectTrue 0<Add/⍳4
+⍝       5 ExpectError '1 2 Add 1 2 3'     ⍝ 5 = LENGTH ERROR (0 = any error)
+⍝     ∇
+⍝
+⍝ Run every test under a folder (or one test file):
+⍝     dyalog test [folder|file]                  from the shell
+⍝     Tester.Run '/app/path'                     from a session; returns 0 or 1
+⍝
+⍝ Each test file runs in a fresh namespace with the folder's code loaded
+⍝ (.apli, .apln, .aplc, .aplf, .aplo, and .apla files as variables).
+
+    ⎕IO←1 ⋄ ⎕ML←1
+    Skip←'node_modules' '.venv' '__pycache__'        ⍝ folders never searched
+    Order←'.apli' '.apln' '.aplc' '.aplf' '.aplo'    ⍝ load order: interfaces first
+    Asserts←'ExpectEq' 'ExpectTrue' 'ExpectFalse' 'ExpectNear' 'ExpectError' 'Fail' '⍙Where' '⍙Show'
+
+    ∇ code←Run path;files;t0;res;folder;t;r;counts;secs
+    ⍝ Run all *_test.aplf under path. Prints a report; returns 0 if all passed.
+      t0←⎕AI[3]
+      files←FindTests path
+      :If 0=≢files
+          ⎕←'No *_test.aplf files found in ',path
+          code←0 ⋄ :Return
+      :EndIf
+      res←⍬
+      :For folder :In ∪Folder¨files
+          ⎕←'' ⋄ ⎕←folder
+          :For t :In (folder∘≡¨Folder¨files)/files
+              res,←⊂r←RunOne t
+              Report r
+          :EndFor
+      :EndFor
+      counts←+⌿(⊃¨res)∘.≡'pass' 'fail' 'error'
+      secs←(⎕AI[3]-t0)÷1000
+      ⎕←''
+      ⎕←(⍕≢res),' tests: ',(⍕counts[1]),' passed, ',(⍕counts[2]),' failed, ',(⍕counts[3]),' errors  (',(⍕secs),' s)'
+      code←0<+/1↓counts
+    ∇
+
+    ∇ r←RunOne file;ns;name;warn;at;call
+    ⍝ Run one test file in a fresh namespace. r: status name messages checks
+      ns←#.⎕NS''
+      {}ns.⎕FX¨⎕NR¨Asserts               ⍝ give the sandbox the Expect… functions
+      warn←ns LoadCode CodeFolder file
+      ns.(⍙fails ⍙checks)←⍬ 0
+      :Trap 0
+          name←⊃2 ns.⎕FIX'file://',file
+      :Else
+          r←'error'(2⊃⎕NPARTS file)(warn,⊂'could not load the test file: ',ErrorText ⍬)0
+          :Return
+      :EndTrap
+      at←⊃ns.⎕AT name                    ⍝ (has-result valence …)
+      call←((1⊃at)/'⍙r←'),name,((0≠2⊃at)/' ⍬')
+      :Trap 0
+          ns⍎call
+          r←((1+0=≢ns.⍙fails)⊃'fail' 'pass')name(warn,ns.⍙fails)ns.⍙checks
+      :Else
+          r←'error'name(warn,ns.⍙fails,⊂ErrorText ⍬)ns.⍙checks
+      :EndTrap
+    ∇
+
+    ∇ warn←ns LoadCode folder;names;types;files;ext;todo;failed;f;pass
+    ⍝ Load the source files in folder (not the tests) into namespace ns.
+      (names types)←0 1(⎕NINFO⍠1)folder,'*'
+      files←(types=2)/names
+      files←files/⍨~∨/¨'_test.aplf'∘⍷¨files
+      ext←{3⊃⎕NPARTS ⍵}¨files
+      todo←files[⍋Order⍳ext]/⍨(ext∊Order)[⍋Order⍳ext]
+      ⍝ A few passes, so a file that needs another one (a class needing its
+      ⍝ interface, say) loads once its dependency has.
+      :For pass :In ⍳3
+          failed←⍬
+          :For f :In todo
+              :Trap 0
+                  {}(1+(⊂3⊃⎕NPARTS f)∊'.aplf' '.aplo')ns.⎕FIX'file://',f
+              :Else
+                  failed,←⊂f
+              :EndTrap
+          :EndFor
+          :If 0=≢todo←failed ⋄ :Leave ⋄ :EndIf
+      :EndFor
+      warn←{'warning: could not load ',⍵}¨todo
+      ⍝ .apla files become variables named after the file (Grid.apla → Grid)
+      :For f :In files/⍨ext∊⊂'.apla'
+          :Trap 0
+              ns.⍙v←ReadApla f
+              ns⍎(2⊃⎕NPARTS f),'←⍙v'
+          :Else
+              warn,←⊂'warning: could not read ',f
+          :EndTrap
+      :EndFor
+    ∇
+
+    ∇ files←FindTests path
+    ⍝ path is a test file, or a folder searched recursively.
+      :If ~⎕NEXISTS path
+          ('No such file or folder: ',path)⎕SIGNAL 22
+      :EndIf
+      :If 2=1 ⎕NINFO path
+          files←,⊂path
+      :Else
+          files←{⍵[⍋⍵]}Walk(-'/'=⊃⌽path)↓path
+      :EndIf
+    ∇
+
+    ∇ r←Walk dir;names;types;base;keep
+      (names types)←0 1(⎕NINFO⍠1)dir,'/*'
+      :If 0=≢names ⋄ r←⍬ ⋄ :Return ⋄ :EndIf
+      base←{⌽(∧\'/'≠⌽⍵)/⌽⍵}¨names        ⍝ last part of each path
+      keep←~(base∊Skip)∨'.'=⊃¨base       ⍝ skip hidden folders and Skip list
+      r←(keep∧(types=2)∧{'_test.aplf'≡¯10↑⍵}¨names)/names
+      ⍝ Only recurse when there are subfolders: Walk¨⍬ would still call Walk
+      ⍝ once on a blank "prototype" argument.
+      :If ∨/keep∧types=1
+          r,←⊃,/Walk¨(keep∧types=1)/names
+      :EndIf
+    ∇
+
+    Folder←{⊃1⎕NPARTS ⍵}
+    ⍝ Tests in a tests/ folder test the code in the folder above it
+    CodeFolder←{f←Folder ⍵ ⋄ 'tests/'≡¯6↑f:Folder ¯1↓f ⋄ f}
+
+    ∇ a←ReadApla file;lines;NoComment
+    ⍝ Array notation file: drop comments and blank lines, join with ⋄, evaluate
+      NoComment←{(∧\~(⍵='⍝')>≠\⍵='''')/⍵}
+      lines←NoComment¨⊃⎕NGET file 1
+      a←⍎¯3↓∊((∨/¨' '≠lines)/lines),¨⊂' ⋄ '
+    ∇
+
+    ∇ t←ErrorText dummy;dm
+      dm←⎕DMX.DM
+      t←⎕DMX.EM,((×≢⎕DMX.Message)/': ',⎕DMX.Message)
+      :If 1<≢dm ⋄ t,←'  at ',{⍵/⍨∨\' '≠⍵}2⊃dm ⋄ :EndIf
+    ∇
+
+    ∇ Report r;status;name;msgs;n;m
+      (status name msgs n)←r
+      ⎕←'  ',((('pass' 'fail' 'error')⍳⊂status)⊃'✅' '❌' '💥'),' ',name,(status≡'pass')/'  (',(⍕n),' checks)'
+      :For m :In msgs ⋄ ⎕←'       ',m ⋄ :EndFor
+    ∇
+
+⍝ ─── Assertions. Copied into each test's namespace, so tests call them
+⍝     without a prefix. Failures are collected; the test keeps running.
+⍝     Each returns a shy result, 1 (passed) or 0, so they also work as the
+⍝     last line of a dfn test, and in conditions: :If 5 ExpectEq x …
+
+    ∇ {ok}←expected ExpectEq actual;e;a;Shape
+      ⍙checks+←1
+      :If ~ok←expected≡actual
+          (e a)←⍙Show¨expected actual
+          :If e≡a      ⍝ look the same: say how they differ
+              Shape←{0=≢⍴⍵:'⍬ (scalar)' ⋄ ⍕⍴⍵}
+              a,←'  (shape ',(Shape expected),' vs ',(Shape actual),', depth ',(⍕≡expected),' vs ',(⍕≡actual),')'
+          :EndIf
+          Fail'expected ',e,', got ',a
+      :EndIf
+    ∇
+
+    ∇ {ok}←ExpectTrue b
+      ⍙checks+←1
+      :If ~ok←(0<≢,b)∧∧/,b≡¨1
+          Fail'expected true (1), got ',⍙Show b
+      :EndIf
+    ∇
+
+    ∇ {ok}←ExpectFalse b
+      ⍙checks+←1
+      :If ~ok←(0<≢,b)∧∧/,b≡¨0
+          Fail'expected false (0), got ',⍙Show b
+      :EndIf
+    ∇
+
+    ∇ {ok}←expected ExpectNear actual;tol
+    ⍝ Numbers equal to within 1e¯6, for floating-point results:
+    ⍝   3.14159265 ExpectNear ○1
+      ⍙checks+←1
+      tol←1e¯6
+      :If ~ok←((⍴expected)≡⍴actual)∧∧/,tol≥|expected-actual
+          Fail'expected ',(⍙Show expected),' (±',(⍕tol),'), got ',⍙Show actual
+      :EndIf
+    ∇
+
+    ∇ {ok}←{errnum}ExpectError expr;⍙r
+    ⍝ expr (text) must raise an error; errnum 0 (default) means any error.
+    ⍝ Common numbers: 2 SYNTAX, 3 INDEX, 4 RANK, 5 LENGTH, 6 VALUE, 11 DOMAIN
+      ⍙checks+←1
+      :If 0=⎕NC'errnum' ⋄ errnum←0 ⋄ :EndIf
+      ok←0
+      :Trap 0
+          ⍙r←⍎expr
+          Fail'expected an error from: ',expr
+      :Else
+          ok←(errnum=0)∨errnum=⎕EN
+          :If ~ok
+              Fail'expected error ',(⍕errnum),' from: ',expr,', got ',⎕DMX.EM
+          :EndIf
+      :EndTrap
+    ∇
+
+    ∇ {ok}←Fail msg
+    ⍝ Record a failure (call it directly for custom checks)
+      ok←0
+      ⍙fails,←⊂⍙Where,msg
+    ∇
+
+    ∇ w←⍙Where;k
+    ⍝ "Test_name[line]: " of the first caller that isn't an assertion
+      k←⊃⍸~⎕SI∊'ExpectEq' 'ExpectTrue' 'ExpectFalse' 'ExpectNear' 'ExpectError' 'Fail' '⍙Where' '⍙Show'
+      w←''
+      :If k≠0 ⋄ w←(k⊃⎕SI),'[',(⍕k⊃⎕LC),']: ' ⋄ :EndIf
+    ∇
+
+    ∇ s←⍙Show a
+    ⍝ Short, unambiguous text for an array
+      :If (0=10|⎕DR a)∧1≥|≡a              ⍝ text: quote it
+          s←'''',(,a),''''
+      :ElseIf 0=≢a
+          s←'⍬'
+      :ElseIf 2>≢⍴a
+          s←⍕a
+      :Else                               ⍝ matrix: rows separated by ⋄
+          s←'[',(¯3↓∊({⍵/⍨⌽∨\⌽' '≠⍵}¨↓⍕a),¨⊂' ⋄ '),']'
+      :EndIf
+      s←{200<≢⍵:(197↑⍵),'...' ⋄ ⍵}s
+    ∇
+:EndNamespace

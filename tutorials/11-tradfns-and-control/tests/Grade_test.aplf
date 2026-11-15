@@ -1,0 +1,8 @@
+ Grade_test
+⍝ Grade.aplf (:If / :ElseIf / :Else)
+ 'A'ExpectEq Grade 95
+ 'A'ExpectEq Grade 90             ⍝ boundary
+ 'B'ExpectEq Grade 89
+ 'C'ExpectEq Grade 70
+ 'F'ExpectEq Grade 69
+ 'FBA'ExpectEq Grade¨55 85 91

@@ -22,6 +22,7 @@ install/dyalog/install-cli.sh      # once: links `dyalog` into /usr/local/bin (o
 dyalog                             # APL in this terminal; the current folder is at /app
 dyalog hello.apls                  # run an APL script top to bottom, then exit
 dyalog MyFn.aplf                   # session with MyFn loaded (runs it if it takes no arguments)
+dyalog test [folder|file]          # run *_test.aplf tests (see testing/README.md)
 dyalog ride                        # serve RIDE on localhost:4502, then connect RIDE to it
 dyalog setup                       # first time: install/start Podman, pull the image
 dyalog pull                        # update the image

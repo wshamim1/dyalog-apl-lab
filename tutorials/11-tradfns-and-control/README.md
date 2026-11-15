@@ -175,3 +175,8 @@ FBAC
 - [APL Wiki](https://aplwiki.com)
 
 **Back to:** [Tutorials index](../README.md)
+
+## Tests
+
+The functions in this folder have tests in [tests/](tests). Run them with
+`dyalog test tutorials/11-tradfns-and-control` (see [testing](../../testing/README.md)).

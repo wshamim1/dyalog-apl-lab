@@ -1,0 +1,7 @@
+ Stats_test
+⍝ Stats.apln is a namespace: call its functions as Stats.Name
+ 5 ExpectEq Stats.Mean 2 4 9
+ 3.5 ExpectEq Stats.Median 3 1 4 1 5 9
+ 8 ExpectEq Stats.Range 1 9 5
+ 2 ExpectNear Stats.SD 2 4 4 4 5 5 7 9
+ 3 2 ExpectEq⍴Stats.Summary 1 2 3
