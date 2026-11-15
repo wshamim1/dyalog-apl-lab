@@ -1,0 +1,84 @@
+:Namespace Pipeline
+⍝ Stream processing in APL: read orders from Kafka, keep running totals per
+⍝ region, publish a summary after every batch.
+⍝
+⍝   orders  ──►  [ APL: totals per region (⌸) ]  ──►  order-stats
+⍝
+⍝ Restart-safe: on start it restores the last summary from order-stats, and
+⍝ Kafka remembers how far the "apl-processor" group has read, so only new
+⍝ orders are processed. Nothing is counted twice.
+⍝
+⍝ Live (prints as batches arrive):  kafka.sh processor   (LOAD= this file → Run)
+⍝ Until idle, then exit:            kafka.sh run demo/process.apls
+
+    ⎕IO←1 ⋄ ⎕ML←1
+
+    ∇ Load;home
+    ⍝ Load Kafka.apln and Orders.apln into #
+      home←{0=≢⍵:'/app/integrations/kafka' ⋄ ⍵}2⎕NQ'.' 'GetEnvironment' 'DYALOG_KAFKA_HOME'
+      {}#.⎕FIX'file://',home,'/apl/Kafka.apln'
+      {}#.⎕FIX'file://',home,'/apl/Orders.apln'
+      #.Kafka.Init
+    ∇
+
+    Brokers←{0=≢⍵:'apl-kafka:19092' ⋄ ⍵}2⎕NQ'.' 'GetEnvironment' 'KAFKA_BROKERS'
+
+    ∇ s←Restore;c;msgs
+    ⍝ The last published summary, or an empty state. Reads order-stats from the
+    ⍝ start with a one-off group, so it sees every summary ever published.
+      c←#.Kafka.Consumer Brokers('stats-restore-',⍕⎕AI[2]+1000×⎕AI[3])'order-stats'
+      msgs←1000000 3000 1000 #.Kafka.Poll c
+      :If 0=≢msgs
+          s←#.Orders.Empty
+          ⎕←'No previous summary: starting from zero.'
+      :Else
+          s←#.Orders.FromSummary(⊃⌽msgs).data
+          ⎕←'Restored totals from the last summary (',(⍕+/s.orders),' orders so far).'
+      :EndIf
+    ∇
+
+    ∇ (s n)←{wait}Step(s c p);msgs;orders
+    ⍝ One batch: poll, add to the totals, publish a summary, confirm progress.
+    ⍝ wait: ms to wait for the first message (default 2000).
+      :If 0=⎕NC'wait' ⋄ wait←2000 ⋄ :EndIf
+      msgs←500 wait 500 #.Kafka.Poll c
+      n←≢msgs
+      :If n=0 ⋄ :Return ⋄ :EndIf
+      orders←(⊂⍬)~⍨msgs.data                     ⍝ skip anything that isn't JSON
+      s←s #.Orders.Add orders
+      p #.Kafka.Send'order-stats'(#.Orders.Summary s)'summary'
+      {}#.Kafka.Flush p
+      {}c.commit                                 ⍝ tell Kafka these orders are done
+      ⎕←'' ⋄ ⎕←'Batch of ',(⍕n),' orders · ',(⍕+/s.orders),' in total'
+      ⎕←#.Orders.Table s
+    ∇
+
+    ∇ RunUntilIdle;c;p;s;n
+    ⍝ Process everything waiting, then stop.
+      Load
+      s←Restore
+      c←#.Kafka.Consumer Brokers'apl-processor' 'orders'
+      p←#.Kafka.Producer Brokers
+      ⍝ The first poll waits longer: after joining its group, a consumer gets
+      ⍝ its partitions only once Kafka has rebalanced the group, which can
+      ⍝ take seconds (longer if a previous processor was stopped abruptly).
+      (s n)←20000 Step s c p
+      :While n>0
+          (s n)←Step s c p
+      :EndWhile
+      ⎕←'' ⋄ ⎕←'No new orders. Totals: ',(⍕+/s.orders),' orders, revenue ',⍕+/s.revenue
+    ∇
+
+    ∇ Run;c;p;s;n
+    ⍝ Live: keep processing as orders arrive (stop with Ctrl+C).
+      ⎕PW←200
+      Load
+      s←Restore
+      c←#.Kafka.Consumer Brokers'apl-processor' 'orders'
+      p←#.Kafka.Producer Brokers
+      ⎕←'Waiting for orders on the "orders" topic. Ctrl+C to stop.'
+      :While 1
+          (s n)←Step s c p
+      :EndWhile
+    ∇
+:EndNamespace

@@ -1,0 +1,71 @@
+:Namespace Orders
+⍝ The demo's business logic: sample orders and running totals per region.
+⍝ Plain APL with no Kafka calls, so it can be tested on its own.
+
+    ⎕IO←1 ⋄ ⎕ML←1
+    Regions←'North' 'South' 'East' 'West'
+    Products←'Widget' 'Gadget' 'Doohickey' 'Gizmo'
+    Prices←4.99 19.99 14.5 49
+
+    ∇ o←{start}Make n;i
+    ⍝ n sample orders (namespaces), numbered from start (default 1).
+    ⍝ Deterministic, so runs and tests are repeatable.
+      :If 0=⎕NC'start' ⋄ start←1 ⋄ :EndIf
+      o←{
+          m←⎕NS ⍬
+          m.id←⍵
+          m.region←Regions⊃⍨1+4|(3×⍵)+⌊⍵÷7
+          m.product←Products⊃⍨1+4|(2×⍵)+⌊⍵÷5
+          m.qty←1+19|(7×⍵)+⌊⍵÷4
+          m.price←Prices⊃⍨1+4|(11×⍵)+⌊⍵÷6
+          m
+      }¨start+¯1+⍳n
+    ∇
+
+    ∇ s←Empty
+    ⍝ A fresh state: one row per region, nothing counted yet.
+      s←⎕NS ⍬
+      s.region←Regions
+      s.orders←0⍴⍨≢Regions
+      s.revenue←0⍴⍨≢Regions
+    ∇
+
+    ∇ s←s Add orders;regions;amounts;i
+    ⍝ Add a batch of orders to the running totals (returns a new state).
+    ⍝ ⌸ (key) groups the batch by region; the totals are then added in.
+      s←⎕NS s
+      :If 0=≢orders ⋄ :Return ⋄ :EndIf
+      regions←orders.region
+      amounts←orders.(qty×price)
+      i←s.region⍳∪regions
+      s.orders[i]+←regions{≢⍵}⌸amounts
+      s.revenue[i]+←regions{+/⍵}⌸amounts
+      s.revenue←Cents s.revenue
+    ∇
+
+    ∇ t←Table s;o
+    ⍝ The state as a table, biggest revenue first: region orders revenue
+      o←⍒s.revenue
+      t←s.region[o],s.orders[o],[1.5]s.revenue[o]
+    ∇
+
+    ∇ j←Summary s
+    ⍝ The state as a namespace for JSON: {"total":…, "orders":…, "regions":[…]}
+      j←⎕NS ⍬
+      j.orders←+/s.orders
+      j.total←Cents+/s.revenue
+      j.regions←{r←⎕NS ⍬ ⋄ r.(region orders revenue)←⍵ ⋄ r}¨↓Table s
+    ∇
+
+    ∇ s←FromSummary j;r;i
+    ⍝ Rebuild a state from a Summary (e.g. the last one read back from Kafka)
+      s←Empty
+      :For r :In j.regions
+          i←s.region⍳⊂r.region
+          s.orders[i]←r.orders
+          s.revenue[i]←r.revenue
+      :EndFor
+    ∇
+
+    Cents←{(⌊0.5+100×⍵)÷100}
+:EndNamespace

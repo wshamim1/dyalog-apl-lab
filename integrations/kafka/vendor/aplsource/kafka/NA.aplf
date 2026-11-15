@@ -1,0 +1,26 @@
+﻿ NA file;Describe;res;funcs;z;version;pp
+ version←#.⎕WG'AplVersion'
+ :Select ⊃version
+ :CaseList 'Linux-64' 'Linux'  'AIX' 'AIX-64'
+     file,←'.so'
+ :Case 'Mac-64'
+     file,←'.dylib'
+ :Else
+    ⍝ do nothing
+ :EndSelect
+ ⎕NA'I4 ',file,'|Describe >0T1 =I4'
+ :If 0=⊃res←Describe 1024 1024
+     funcs←⎕JSON 2⊃res
+     z←('\%P'⎕R file)funcs.Patterns
+     :If 17>2⊃⎕VFI{(¯1+⍵⍳'.')↑⍵}2⊃version
+         :If '-64'≡¯3↑⊃version
+             pp←' U8' ' >U8'
+         :Else
+             pp←' U4' ' >U4'
+         :EndIf
+         z←(' P' ' >P'⎕R pp)¨z
+     :EndIf
+     {}⎕NA¨z
+ :Else
+     'Shared lib failed'⎕SIGNAL 6
+ :EndIf

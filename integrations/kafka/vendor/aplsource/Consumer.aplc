@@ -1,0 +1,119 @@
+:Class Consumer
+    :field public shared kafka
+    :field private cons
+    :field private topic_partition_list
+
+    ⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝
+    ⍝ Constructor
+
+    ∇ make
+      :Access Public
+      :Implements constructor
+      cons←kafka.new
+    ∇          
+
+    ∇ make_config config;i;opt;val
+      :Access Public
+      :Implements constructor
+      cons←kafka.new
+      :If (2=⍴⍴config)∧(2=¯1↑⍴config)  
+          {}configure¨↓config
+      :Else
+       ⍝ todo error
+      :EndIf
+    ∇ 
+
+    ∇ make_config_topic(config topic_list);i;opt;val
+      :Access Public
+      :Implements constructor
+      cons←kafka.new
+      :If (2=⍴⍴config)∧(2=¯1↑⍴config)  
+          {}configure¨↓config
+      :Else
+       ⍝ todo error
+      :EndIf
+      subscribe topic_list
+    ∇
+
+    ⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝
+    ⍝ Destructor
+
+    ∇ unmake;_
+      :Implements destructor
+      _←kafka.UninitConsumer cons
+    ∇
+
+    ⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝
+    ⍝ Configuration Settings
+
+    ∇ r←configure(opt val)
+      :Access public
+      r←kafka.setconf cons opt val
+    ∇
+
+    ⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝
+    ⍝ Set topic and partition given a list name.
+    ⍝ NB: it takes topic name, not topic handle
+
+    ∇ r←topic_partition
+      :Access public
+      r←kafka.new_topic_partition
+    ∇
+
+    ∇ r←set_topic_partition(topic_partition_list topicname partition)
+      :Access public
+      r←kafka.set_topic_partition topic_partition_list topicname partition
+    ∇
+
+    ∇ r←set_offset(topic_partition_list topicname partition offset)
+      :Access public
+      r←kafka.set_offset topic_partition_list topicname partition offset
+    ∇
+
+    ∇ r←subscribe_topic_partition topic_partition_list
+      :Access public
+      r←kafka.subscribe_topic_partition cons topic_partition_list
+    ∇
+
+    ∇ r←subscribe topic_list;topic;topic_partition_list;i
+      :Access public
+      
+      :If 0≠≢topic_list
+          topic_partition_list←topic_partition
+          {}set_topic_partition¨((topic_partition_list,¨⊂¨(,⊆topic_list)~⊂''),¨⊂0)
+          r←subscribe_topic_partition topic_partition_list
+      :Else
+      ⍝ Throw error   
+      :EndIf 
+    ∇
+
+    ⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝
+    ⍝ Consumer
+    ∇ r←consume
+      :Access public
+      r←kafka.consume cons 200 2048 200
+    ∇
+
+    ∇ r←consume_record
+      :Access public
+      r←kafka.consume cons 200 2048 200
+      :If 0=⊃r
+          r←0(⎕NEW #.Record(r[2 3 4 5 6]))
+      :EndIf
+    ∇  
+    
+    ∇ r←commit
+      :Access public
+      r←kafka.commit cons 0
+    ∇
+
+    ⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝⍝
+    ⍝ Helpers
+    ∇ r←get_consumer
+      :Access public
+      r←cons
+    ∇
+
+:EndClass
+
+

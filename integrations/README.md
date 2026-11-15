@@ -9,12 +9,12 @@ Ways to connect Dyalog APL to other systems.
 | [mysql/](mysql/README.md) | Load MySQL query results into APL, analyse them, and write results back as tables. Use it from Python, or straight from APL with `.aplf` functions ([mysql/apl](mysql/apl/README.md)). | ready |
 | [jarvis/](jarvis/README.md) | HTTP JSON API: APL functions become `POST` endpoints any language can call (Jarvis) | ready |
 | `mcp_server/` | MCP tools (`apl_eval`, `apl_load`, `apl_reset`) for Claude Code, Claude Desktop and other clients | planned |
-| `kafka/` | Run APL on messages from Kafka topics | planned |
+| [kafka/](kafka/README.md) | Produce and consume Kafka messages from APL; a stream processor keeping running totals with `⌸` | ready |
 
 ## Architecture
 
 Integrations that drive Dyalog *from outside* (Python, Streamlit) share one
-client, `dyalog_ride`. Jarvis and the APL MySQL functions run *inside* Dyalog.
+client, `dyalog_ride`. Jarvis, Kafka and the APL MySQL functions run *inside* Dyalog.
 Dashed boxes are planned.
 
 ```mermaid
@@ -22,7 +22,7 @@ flowchart LR
     subgraph integrations["integrations/"]
         st["streamlit_app<br/>web UI + OpenAI"]
         mcp["mcp_server<br/>(planned)"]:::planned
-        kafka["kafka<br/>(planned)"]:::planned
+        kafka["kafka<br/>stream processing"]
         mysqlint["mysql<br/>MySQL bridge"]
         jarvis["jarvis<br/>HTTP API"]
         ride["dyalog_ride<br/>RIDE protocol client"]
@@ -30,13 +30,13 @@ flowchart LR
 
     browser(["Browser"]) --> st
     llmclients(["Claude Code /<br/>Claude Desktop"]) -.-> mcp
-    topics(["Kafka topics"]) -.-> kafka
+    kafka <--> topics[("Kafka broker")]
     st --> openai["☁️ OpenAI"]
     mysqlint <--> mysqldb[("MySQL")]
 
     st --> ride
     mcp -.-> ride
-    kafka -.-> ride
+    kafka --> dyalog
     mysqlint --> ride
     apps(["Any app<br/>curl / Python / JS"]) -- "HTTP :8080" --> jarvis
     jarvis --> dyalog

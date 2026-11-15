@@ -1,0 +1,26 @@
+ Orders_test;o;s;t;both
+ o←Orders.Make 8
+ 8 ExpectEq≢o
+ (⍳8)ExpectEq o.id
+ ExpectTrue∧/o.region∊Orders.Regions
+ (o.id)ExpectEq(Orders.Make 8).id                        ⍝ deterministic
+ (9 10)ExpectEq(9 Orders.Make 2).id                      ⍝ numbering can continue
+
+⍝ Running totals: adding in two batches = adding all at once
+ s←Orders.Empty Orders.Add 4↑o
+ s←s Orders.Add 4↓o
+ both←Orders.Empty Orders.Add o
+ s.orders ExpectEq both.orders
+ s.revenue ExpectEq both.revenue
+ 8 ExpectEq+/s.orders
+ (Orders.Cents+/o.(qty×price))ExpectNear+/s.revenue
+
+ t←Orders.Table s
+ ExpectTrue∧/2≥/t[;3]                                    ⍝ biggest revenue first
+ (Orders.Empty Orders.Add ⍬).orders ExpectEq 0 0 0 0     ⍝ empty batch changes nothing
+ 8 ExpectEq(Orders.Summary s).orders
+
+⍝ A summary (as published to Kafka and read back as JSON) restores the state
+ s←Orders.FromSummary 0 ⎕JSON 1 ⎕JSON Orders.Summary both
+ both.orders ExpectEq s.orders
+ both.revenue ExpectEq s.revenue

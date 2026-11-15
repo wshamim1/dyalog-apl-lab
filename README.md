@@ -2,7 +2,7 @@
 
 *Thinking in arrays with [Dyalog APL](https://www.dyalog.com): tutorials,
 runnable scripts, a `dyalog` command-line tool, and integrations with
-Python, OpenAI, Streamlit and MySQL.*
+Python, OpenAI, Streamlit, MySQL and Kafka.*
 
 ```apl
       +/⍳100                       ⍝ sum of 1 to 100
@@ -119,6 +119,7 @@ flowchart LR
 | **dyalog_ride** | Python client for a live Dyalog session over the RIDE protocol. Keeps state between calls, reports errors, handles timeouts and multi-line code. | [README](integrations/dyalog_ride/README.md) |
 | **streamlit_app** | Web UI: describe what you want in English, and an OpenAI model writes the APL, runs it, fixes errors and explains it. Also has a plain APL REPL with a glyph keyboard. | [README](integrations/streamlit_app/README.md) |
 | **jarvis** | HTTP JSON API: each `api/Name.aplf` becomes `POST /Name`, callable from curl, Python, JavaScript or anything else | [README](integrations/jarvis/README.md) |
+| **kafka** | Produce and consume Kafka messages from APL; a restart-safe stream processor keeping running totals per region | [README](integrations/kafka/README.md) |
 | **mysql** (Python) | Load query results into APL as column vectors, analyse them, and write results back as tables | [README](integrations/mysql/README.md) |
 | **mysql/apl** (pure APL) | `MySQLConnect`, `MySQLQuery`, `MySQLExec`, `MySQLSave` as `.aplf` functions, using Dyalog's SQAPL over ODBC | [README](integrations/mysql/apl/README.md) |
 
@@ -144,6 +145,7 @@ integrations/
   dyalog_ride/          Python RIDE-protocol client (stdlib only)
   streamlit_app/        English → APL web app (OpenAI) + REPL
   jarvis/               HTTP JSON API with Jarvis (serve.sh, api/, client examples)
+  kafka/                Kafka from APL: kafka.sh, Kafka.apln, stream-processing demo
   mysql/                MySQL ↔ APL from Python
     apl/                MySQL ↔ APL from APL (SQAPL), plus Dockerfile for the ODBC driver
 install/

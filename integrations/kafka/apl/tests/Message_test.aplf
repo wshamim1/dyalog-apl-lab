@@ -1,0 +1,11 @@
+ Message_test;m
+⍝ What Kafka.Poll returns for each record, built from raw fields
+ m←Kafka.Message'orders'(Kafka.Encode'{"id":7,"region":"Zoë"}')(Kafka.Encode'k1')2 15
+ 'orders'ExpectEq m.topic
+ 'k1'ExpectEq m.key
+ (2 15)ExpectEq m.(partition offset)
+ 7 ExpectEq m.data.id                                     ⍝ JSON parsed into data
+ 'Zoë'ExpectEq m.data.region
+ m←Kafka.Message'logs'(Kafka.Encode'plain text')''0 0
+ 'plain text'ExpectEq m.value
+ ⍬ ExpectEq m.data                                        ⍝ not JSON → ⍬

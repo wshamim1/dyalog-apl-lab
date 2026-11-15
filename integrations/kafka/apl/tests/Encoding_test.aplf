@@ -1,0 +1,11 @@
+ Encoding_test;n
+⍝ Kafka carries bytes. Kafka.Encode makes them (UTF-8, JSON for non-text);
+⍝ Kafka.Decode turns them back into text. No broker needed.
+ 'hello'ExpectEq Kafka.Decode Kafka.Encode'hello'
+ 'Zoë ⍳⍴'ExpectEq Kafka.Decode Kafka.Encode'Zoë ⍳⍴'       ⍝ Unicode survives
+ ExpectTrue 255≥⌈/⎕UCS Kafka.Encode'Zoë ⍳⍴'               ⍝ only byte values on the wire
+ '[1,2,3]'ExpectEq Kafka.Decode Kafka.Encode 1 2 3        ⍝ arrays become JSON
+ '42'ExpectEq Kafka.Decode Kafka.Encode 42
+ n←⎕NS ⍬ ⋄ n.a←1
+ '{"a":1}'ExpectEq Kafka.Decode Kafka.Encode n            ⍝ namespaces become JSON objects
+ ''ExpectEq Kafka.Decode Kafka.Encode''

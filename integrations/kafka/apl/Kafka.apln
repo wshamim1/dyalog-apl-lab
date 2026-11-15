@@ -1,0 +1,126 @@
+:Namespace Kafka
+⍝ A small, friendly layer over Dyalog's Kafka interface (vendor/, v0.1.117).
+⍝ Runs in the dyalog-kafka image (see ../Dockerfile).
+⍝
+⍝   Kafka.Init                                   ⍝ load the library (once)
+⍝   p←Kafka.Producer 'apl-kafka:19092'
+⍝   p Kafka.Send 'orders' order 'North'          ⍝ topic value [key]
+⍝   Kafka.Flush p                                ⍝ wait for delivery
+⍝   c←Kafka.Consumer 'apl-kafka:19092' 'my-group' 'orders'
+⍝   msgs←Kafka.Poll c                            ⍝ messages as namespaces
+⍝   msgs.(key value offset)   msgs.data          ⍝ data: the value parsed as JSON
+⍝
+⍝ Values: text is sent as is; anything else (numbers, arrays, namespaces)
+⍝ is sent as JSON. Everything is UTF-8 encoded, so 'Zoë ⍳⍴' survives.
+
+    ⎕IO←1 ⋄ ⎕ML←1
+    Lib←'/opt/dyalog-kafka'         ⍝ where the Dockerfile puts kafka.so
+
+    ∇ Init;home;src;names;types
+    ⍝ Load Dyalog's Kafka APL source into # and the shared library.
+    ⍝ DYALOG_KAFKA_HOME is this integration's folder (default: in the repo at /app).
+      :If 0≠⎕NC'⍙ready' ⋄ :Return ⋄ :EndIf
+      home←{0=≢⍵:'/app/integrations/kafka' ⋄ ⍵}2⎕NQ'.' 'GetEnvironment' 'DYALOG_KAFKA_HOME'
+      src←home,'/vendor/aplsource/'
+      #.kafka←#.⎕NS''
+      (names types)←0 1(⎕NINFO⍠1)src,'kafka/*.aplf'
+      {}{2 #.kafka.⎕FIX'file://',⍵}¨names
+      {}2 #.⎕FIX'file://',src,'Init.aplf'
+      {}{#.⎕FIX'file://',src,⍵}¨'Record.aplc' 'Producer.aplc' 'Consumer.aplc'
+      #.Init Lib
+      ⍙ready←1
+    ∇
+
+    ∇ p←Producer brokers;cfg
+    ⍝ A producer connected to brokers (e.g. 'apl-kafka:19092')
+      Init
+      cfg←0 2⍴⍬
+      cfg⍪←'bootstrap.servers'brokers
+      cfg⍪←'client.id' 'apl-producer'
+      p←⎕NEW #.Producer cfg
+    ∇
+
+    ∇ {r}←p Send args;topic;value;key
+    ⍝ p Send topic value [key]
+    ⍝ Messages with the same key always go to the same partition, so they
+    ⍝ stay in order relative to each other.
+      (topic value key)←3↑args,(≢args)↓'' '' ''
+      r←p.produce topic(Encode value)(Encode key)
+      :If 0≠⊃r
+          ⎕SIGNAL⊂('EN' 11)('Message'('Kafka.Send failed: ',⍕r))
+      :EndIf
+    ∇
+
+    ∇ r←{timeout}Flush p;t0;quiet;rep;ok;bad
+    ⍝ Wait until delivery reports stop arriving (or timeout ms, default 10000).
+    ⍝ Returns delivered failed. (Uses delivery_report directly: the library's
+    ⍝ update_outstanding has a LENGTH ERROR in v0.1.117.)
+      :If 0=⎕NC'timeout' ⋄ timeout←10000 ⋄ :EndIf
+      t0←⎕AI[3] ⋄ quiet←⎕AI[3] ⋄ ok←bad←0
+      :While (500>⎕AI[3]-quiet)∧timeout>⎕AI[3]-t0
+          rep←p.delivery_report 1000
+          :If (0=⊃rep)∧0<≢2⊃rep
+              ok+←+/0=(2⊃rep)[;2]
+              bad+←+/0≠(2⊃rep)[;2]
+              quiet←⎕AI[3]
+          :Else
+              ⎕DL 0.05
+          :EndIf
+      :EndWhile
+      r←ok bad
+    ∇
+
+    ∇ c←Consumer(brokers group topics);cfg
+    ⍝ A consumer in consumer group `group`, subscribed to topics (one or more).
+    ⍝ A new group starts at the oldest message; an existing one carries on
+    ⍝ where it left off (Kafka remembers each group's position).
+      Init
+      cfg←0 2⍴⍬
+      cfg⍪←'bootstrap.servers'brokers
+      cfg⍪←'client.id' 'apl-consumer'
+      cfg⍪←'group.id'group
+      cfg⍪←'auto.offset.reset' 'earliest'
+      ⍝ If a consumer stops without saying goodbye (Ctrl+C), Kafka waits this
+      ⍝ long before giving its partitions to another one (default 45 s)
+      cfg⍪←'session.timeout.ms' '10000'
+      c←⎕NEW #.Consumer cfg
+      {}c.subscribe topics
+    ∇
+
+    ∇ msgs←{limits}Poll c;max;wait;idle;t0;last;r;rec
+    ⍝ Collect waiting messages: up to max, giving up after `wait` ms if none
+    ⍝ arrive, and stopping once none have arrived for `idle` ms.
+    ⍝ limits: max wait idle (default 1000 10000 1000)
+      :If 0=⎕NC'limits' ⋄ limits←⍬ ⋄ :EndIf
+      (max wait idle)←limits,(≢limits)↓1000 10000 1000
+      msgs←⍬ ⋄ t0←⎕AI[3] ⋄ last←0
+      :While max>≢msgs
+          :If 0=last ⋄ :AndIf wait<⎕AI[3]-t0 ⋄ :Leave ⋄ :EndIf
+          :If 0≠last ⋄ :AndIf idle<⎕AI[3]-last ⋄ :Leave ⋄ :EndIf
+          r←c.consume_record
+          :Select ⊃r
+          :Case 0
+              rec←2⊃r
+              msgs,←⊂Message rec.(Topic Payload Key Partition Offset)
+              last←⎕AI[3]
+          :Case 1                         ⍝ nothing waiting right now
+          :Else
+              ⎕SIGNAL⊂('EN' 11)('Message'('Kafka.Poll failed: ',⍕r))
+          :EndSelect
+      :EndWhile
+    ∇
+
+    ∇ m←Message(topic payload key partition offset)
+    ⍝ A received message as a namespace. data is the value parsed as JSON
+    ⍝ (⍬ if it isn't JSON).
+      m←⎕NS ⍬
+      m.(topic partition offset)←topic partition offset
+      m.key←Decode key
+      m.value←Decode payload
+      m.data←{0::⍬ ⋄ 0 ⎕JSON ⍵}m.value
+    ∇
+
+    ⍝ Text is sent as is; other arrays as JSON. Bytes travel as chars 0-255.
+    Encode←{⎕UCS'UTF-8'⎕UCS{(0=10|⎕DR ⍵)∧1≥|≡⍵:,⍵ ⋄ 1 ⎕JSON ⍵}⍵}
+    Decode←{'UTF-8'⎕UCS ⎕UCS ⍵}
+:EndNamespace

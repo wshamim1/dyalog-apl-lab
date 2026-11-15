@@ -1,0 +1,8 @@
+⍝ Show the latest summary published on "order-stats".
+⍝   kafka.sh run demo/read-stats.apls
+home←{0=≢⍵:'/app/integrations/kafka' ⋄ ⍵}2⎕NQ'.' 'GetEnvironment' 'DYALOG_KAFKA_HOME'
+{}⎕FIX'file://',home,'/demo/Pipeline.apln'
+Pipeline.Load
+s←Pipeline.Restore
+⎕←Orders.Table s
+⎕←'Total revenue: ',⍕+/s.revenue

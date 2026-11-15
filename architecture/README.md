@@ -28,6 +28,7 @@ where everything that's loaded lives.
 | your code: `.aplf`, `.apln`, `.aplc` | RIDE (editor window) |
 | **Jarvis**: the HTTP server, written in APL | terminal, `dyalog` command |
 | **SQAPL**: database access over ODBC | Python: `dyalog_ride`, Streamlit app, MySQL bridge |
+| **Kafka client**: librdkafka + `Kafka.apln` | the Kafka broker (its own container) |
 | **Tester**: the test framework | curl, browsers, other apps |
 | | MySQL, OpenAI |
 
@@ -58,6 +59,7 @@ they sit in different places:
 | Python tools | `dyalog_client.py` | RIDE server · TCP 4502 | Streamlit + OpenAI app, MySQL bridge | [dyalog_ride](../integrations/dyalog_ride/README.md) |
 | HTTP API | `integrations/jarvis/serve.sh` | Jarvis · HTTP 8080 | other apps calling your functions | [jarvis](../integrations/jarvis/README.md) |
 | MySQL from APL | `]load …/MySQL*.aplf` | SQAPL → ODBC → MySQL :3307 | queries from inside APL | [mysql/apl](../integrations/mysql/apl/README.md) |
+| Kafka from APL | `integrations/kafka/kafka.sh run …` | Kafka client → broker :19092 | producing and consuming event streams | [kafka](../integrations/kafka/README.md) |
 
 ## Good to know
 
@@ -68,6 +70,9 @@ they sit in different places:
 - **Files come in through `/app`.** The folder you run `dyalog` from (or the
   repo, for the scripts here) is mounted at `/app`. Code is loaded from there
   with `]load`, `⎕FIX` or `LOAD=`.
+- **Kafka runs in a second container.** The broker and Dyalog share a
+  private container network (`apl-kafka`). Dyalog needs the `dyalog-kafka`
+  image, which adds Dyalog's Kafka library.
 - **SQAPL needs an extra driver.** The APL MySQL functions need the
   `dyalog-mysql` image, which adds the ODBC driver
   (see [mysql/apl](../integrations/mysql/apl/README.md)).

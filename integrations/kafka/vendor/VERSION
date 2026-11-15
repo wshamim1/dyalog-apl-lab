@@ -1,0 +1,13 @@
+Dyalog Kafka interface v0.1.117 (2025-07-10), https://github.com/Dyalog/kafka
+aplsource/: the APL source at tag v0.1.117 (samples omitted), with one
+cosmetic patch: {} added in front of five statements so their results
+aren't printed in an interactive session (the "0 0 0 0" noise):
+  kafka/NA.aplf      ⎕NA¨z               →  {}⎕NA¨z
+  Consumer.aplc (×2) configure¨↓config   →  {}configure¨↓config
+  Consumer.aplc      set_topic_partition¨…  →  {}set_topic_partition¨…  (in subscribe)
+  Producer.aplc      configure¨↓config   →  {}configure¨↓config
+Reapply these when upgrading.
+The Linux shared libraries (kafka.so, librdkafka.so) are not stored here:
+the Dockerfile downloads the v0.1.117 release and checks its SHA-256.
+MIT License: see LICENSE-dyalog-kafka. librdkafka licences ship inside the image.
+The interface is a pre-release; its authors say the API may change.

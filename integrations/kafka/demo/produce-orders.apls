@@ -1,0 +1,18 @@
+⍝ Send sample orders to the "orders" topic.
+⍝   kafka.sh run demo/produce-orders.apls [count] [first-id]   (default 20 1)
+args←2⎕NQ'.' 'GetCommandLineArgs'
+num←{0=≢⍵:⍺ ⋄ ⊃⊃(//⎕VFI ⍵)}
+n←20 num{1<≢⍵:2⊃⍵ ⋄ ''}args
+first←1 num{2<≢⍵:3⊃⍵ ⋄ ''}args
+home←{0=≢⍵:'/app/integrations/kafka' ⋄ ⍵}2⎕NQ'.' 'GetEnvironment' 'DYALOG_KAFKA_HOME'
+brokers←{0=≢⍵:'apl-kafka:19092' ⋄ ⍵}2⎕NQ'.' 'GetEnvironment' 'KAFKA_BROKERS'
+{}⎕FIX'file://',home,'/apl/Kafka.apln'
+{}⎕FIX'file://',home,'/apl/Orders.apln'
+
+p←Kafka.Producer brokers
+orders←first Orders.Make n
+⍝ Key = region: all of a region's orders go to the same partition, in order
+{p Kafka.Send'orders'⍵ ⍵.region}¨orders
+(ok bad)←Kafka.Flush p
+⎕←'Sent ',(⍕ok),' orders (ids ',(⍕first),'–',(⍕first+n-1),'), ',(⍕bad),' failed.'
+⎕OFF 0≠bad

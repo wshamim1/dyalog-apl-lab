@@ -1,0 +1,5 @@
+⍝ Process all waiting orders, publish summaries to "order-stats", then stop.
+⍝   kafka.sh run demo/process.apls
+home←{0=≢⍵:'/app/integrations/kafka' ⋄ ⍵}2⎕NQ'.' 'GetEnvironment' 'DYALOG_KAFKA_HOME'
+{}⎕FIX'file://',home,'/demo/Pipeline.apln'
+Pipeline.RunUntilIdle
