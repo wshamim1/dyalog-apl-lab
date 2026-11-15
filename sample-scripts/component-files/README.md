@@ -46,7 +46,41 @@ dyalog sample-scripts/component-files/export-json.apls    # 2. export to JSON li
 python3 sample-scripts/component-files/load-sqlite.py     # 3–4. load into SQLite, verify
 dyalog sample-scripts/component-files/use-store.apls      # 5. the data-access layer
 dyalog test sample-scripts/component-files                #    its tests
+python3 sample-scripts/component-files/code-map.py        # an HTML map of all of the above
 ```
+
+## A map of the code
+
+[code-map.py](code-map.py) reads the source code (no Dyalog needed) and writes
+`export/code-map.html`, a page showing how everything here fits together:
+
+- a data-flow graph: which code creates, reads and writes which `.dcf` file,
+  and the exports and database built from them
+- a matrix of who touches which file, with line numbers
+- the `Store` layer: what each function touches and who calls it
+- lineage from each component file through its export to the SQL tables
+- migration findings: code that bypasses `Store`, hard-coded component
+  numbers, writes protected by `⎕FHOLD`, untested functions
+- a card for every code file and data file, including what each component
+  holds (read from the last export)
+
+It follows tie numbers and small wrappers such as `Tie←{(Folder,⍵)⎕FTIE 0}`.
+It's pattern-based, so it's a strong first draft, not a proof. Point it at
+another folder with `python3 code-map.py path/to/folder`.
+
+### In the browser
+
+[code_map_app.py](code_map_app.py) is a Streamlit page for the same report:
+type any folder path, click **Generate report**, and the findings and full
+report appear, with a download button. It writes nothing into the folder
+unless you tick **Also save**.
+
+```sh
+.venv/bin/streamlit run sample-scripts/component-files/code_map_app.py   # http://localhost:8501
+```
+
+It uses the repo's `.venv` (see [integrations/streamlit_app](../../integrations/streamlit_app/README.md)
+for setting it up); only `streamlit` is needed.
 
 ## The migration path, step by step
 
@@ -133,6 +167,8 @@ while writing; in SQL that becomes a transaction.
 | [export-json.apls](export-json.apls) | step 2: JSON lines + checks, in `export/` |
 | [load-sqlite.py](load-sqlite.py) | steps 3–4: load into SQLite, compare with the APL totals |
 | [Store.apln](Store.apln), [use-store.apls](use-store.apls) | step 5: the data-access layer and a demo |
+| [code-map.py](code-map.py) | generates `export/code-map.html`, a map of the code and data |
+| [code_map_app.py](code_map_app.py) | the same report in a Streamlit page, for any folder |
 | [tests/Store_test.aplf](tests/Store_test.aplf) | tests for `Store` (on its own files in `/tmp`) |
 | `data/` | the sample `.dcf` files (small binaries, committed) |
 | `export/` | output of steps 2–4 (git-ignored) |
