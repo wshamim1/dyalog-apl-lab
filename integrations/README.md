@@ -4,15 +4,17 @@ Ways to connect Dyalog APL to other systems.
 
 | Folder | What it is | Status |
 | --- | --- | --- |
-| [dyalog_ride/](dyalog_ride/README.md) | Python client for a live Dyalog session over the RIDE protocol. The others build on it. | ready |
+| [dyalog_ride/](dyalog_ride/README.md) | Python client for a live Dyalog session over the RIDE protocol. The Python integrations build on it. | ready |
 | [streamlit_app/](streamlit_app/README.md) | Web UI: describe what you want in English, and an OpenAI model writes and runs the APL. Also has a plain APL REPL. | ready |
 | [mysql/](mysql/README.md) | Load MySQL query results into APL, analyse them, and write results back as tables. Use it from Python, or straight from APL with `.aplf` functions ([mysql/apl](mysql/apl/README.md)). | ready |
+| [jarvis/](jarvis/README.md) | HTTP JSON API: APL functions become `POST` endpoints any language can call (Jarvis) | ready |
 | `mcp_server/` | MCP tools (`apl_eval`, `apl_load`, `apl_reset`) for Claude Code, Claude Desktop and other clients | planned |
 | `kafka/` | Run APL on messages from Kafka topics | planned |
 
 ## Architecture
 
-Every integration reaches Dyalog through the same client, `dyalog_ride`.
+Integrations that drive Dyalog *from outside* (Python, Streamlit) share one
+client, `dyalog_ride`. Jarvis and the APL MySQL functions run *inside* Dyalog.
 Dashed boxes are planned.
 
 ```mermaid
@@ -22,6 +24,7 @@ flowchart LR
         mcp["mcp_server<br/>(planned)"]:::planned
         kafka["kafka<br/>(planned)"]:::planned
         mysqlint["mysql<br/>MySQL bridge"]
+        jarvis["jarvis<br/>HTTP API"]
         ride["dyalog_ride<br/>RIDE protocol client"]
     end
 
@@ -35,6 +38,8 @@ flowchart LR
     mcp -.-> ride
     kafka -.-> ride
     mysqlint --> ride
+    apps(["Any app<br/>curl / Python / JS"]) -- "HTTP :8080" --> jarvis
+    jarvis --> dyalog
     ride -- "TCP :4502" --> dyalog[("Dyalog APL<br/>container")]
 
     classDef planned stroke-dasharray: 5 5
@@ -45,8 +50,8 @@ flowchart LR
 - One folder per integration, named in `snake_case` so it can be imported
   as a Python package.
 - Each folder has its own `README.md` covering how to run it.
-- Integrations talk to Dyalog through `dyalog_ride`. They don't open their
-  own connections.
+- Python integrations talk to Dyalog through `dyalog_ride`, rather than
+  opening their own connections.
 - Dyalog runs in a container. Mount the repo read-only (`:ro`) whenever an
   integration runs code that you didn't write yourself (for example, code
   from an AI or a message queue).

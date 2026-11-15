@@ -11,6 +11,15 @@ Python, OpenAI, Streamlit and MySQL.*
 2 3 5 7 11 13 17 19
 ```
 
+## How it fits together
+
+![One Dyalog interpreter in a container, reached three ways: a terminal session, RIDE and Python over the RIDE port 4502, and HTTP clients through Jarvis on port 8080. Jarvis, SQAPL and your code all run inside the workspace.](architecture/architecture.svg)
+
+One Dyalog interpreter runs in a container. You reach it from a **terminal**,
+from **RIDE** or Python over the RIDE port, or over **HTTP** through Jarvis,
+which runs inside it. See [architecture/](architecture/README.md) for the full
+explanation.
+
 ## What's inside
 
 | | |
@@ -109,6 +118,7 @@ flowchart LR
 | --- | --- | --- |
 | **dyalog_ride** | Python client for a live Dyalog session over the RIDE protocol. Keeps state between calls, reports errors, handles timeouts and multi-line code. | [README](integrations/dyalog_ride/README.md) |
 | **streamlit_app** | Web UI: describe what you want in English, and an OpenAI model writes the APL, runs it, fixes errors and explains it. Also has a plain APL REPL with a glyph keyboard. | [README](integrations/streamlit_app/README.md) |
+| **jarvis** | HTTP JSON API: each `api/Name.aplf` becomes `POST /Name`, callable from curl, Python, JavaScript or anything else | [README](integrations/jarvis/README.md) |
 | **mysql** (Python) | Load query results into APL as column vectors, analyse them, and write results back as tables | [README](integrations/mysql/README.md) |
 | **mysql/apl** (pure APL) | `MySQLConnect`, `MySQLQuery`, `MySQLExec`, `MySQLSave` as `.aplf` functions, using Dyalog's SQAPL over ODBC | [README](integrations/mysql/apl/README.md) |
 
@@ -125,6 +135,7 @@ dyalog ride                                                   # terminal 1
 
 ```
 tutorials/              12 lessons (00–11) with exercises: start here
+architecture/           how everything connects (diagram + explanation)
 cheatsheet/             every glyph: name, RIDE key, meanings, examples (built by build.py)
 sample-scripts/         runnable .apls programs, plus poem.txt and sales.csv data
   file-types/           one example of every Dyalog file type (with tests/)
@@ -132,6 +143,7 @@ testing/                the test framework (Tester.apln) and an example
 integrations/
   dyalog_ride/          Python RIDE-protocol client (stdlib only)
   streamlit_app/        English → APL web app (OpenAI) + REPL
+  jarvis/               HTTP JSON API with Jarvis (serve.sh, api/, client examples)
   mysql/                MySQL ↔ APL from Python
     apl/                MySQL ↔ APL from APL (SQAPL), plus Dockerfile for the ODBC driver
 install/

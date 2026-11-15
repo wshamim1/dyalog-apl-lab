@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="420" viewBox="0 0 420 190" role="img" aria-label="Correct: HTTP clients outside call Jarvis over HTTP; Jarvis sits inside Dyalog next to your code and calls it.">
+            <defs><marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-hot" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<style>
+  svg { color: #1d2430; font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  .region { fill: none; stroke: #9aa3b2; stroke-width: 1.5; stroke-dasharray: 6 5; }
+  .interp { fill: #e3f1f6; stroke: #0e6f8f; stroke-width: 1.5; }
+  .ws { fill: #ffffff; stroke: #0e6f8f; stroke-width: 1; stroke-dasharray: 4 4; }
+  .box { fill: #ffffff; stroke: #1d2430; stroke-width: 1.2; }
+  .door { fill: #ffffff; stroke: #0e6f8f; stroke-width: 1.6; }
+  .hotbox { fill: #fbeee4; stroke: #b4531a; stroke-width: 1.8; }
+  .t { font-size: 13px; font-weight: 600; fill: #1d2430; }
+  .s { font-size: 11px; fill: #5d6676; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  .lab { font-size: 11px; fill: #5d6676; }
+  .regionlab { font-size: 12px; font-weight: 600; fill: #5d6676; letter-spacing: 0.04em; }
+  .corelab { font-size: 12px; font-weight: 600; fill: #0e6f8f; letter-spacing: 0.04em; }
+  .wire { fill: none; stroke: #1d2430; stroke-width: 1.4; }
+  .wire.hot { stroke: #b4531a; stroke-width: 2; }
+  .hotlab { font-size: 11px; font-weight: 600; fill: #b4531a; }
+  .ah { fill: #1d2430; }
+  .ah-hot { fill: #b4531a; }
+  @media (prefers-color-scheme: dark) {
+    svg { color: #e3e8f0; }
+    .region { stroke: #5a6474; }
+    .interp { fill: #15303b; stroke: #5cc0de; }
+    .ws, .box, .door { fill: #1a2029; }
+    .ws, .door { stroke: #5cc0de; }
+    .box { stroke: #e3e8f0; }
+    .hotbox { fill: #3a2618; stroke: #f0a35f; }
+    .t { fill: #e3e8f0; }
+    .s, .lab, .regionlab { fill: #9aa4b5; }
+    .corelab { fill: #5cc0de; }
+    .wire { stroke: #e3e8f0; }
+    .wire.hot { stroke: #f0a35f; }
+    .hotlab { fill: #f0a35f; }
+    .ah { fill: #e3e8f0; }
+    .ah-hot { fill: #f0a35f; }
+  }
+</style>
+            <rect class="box" x="16" y="70" width="130" height="48" rx="8"/>
+            <text class="t" x="81" y="92" text-anchor="middle">HTTP client</text>
+            <text class="s" x="81" y="108" text-anchor="middle">curl · Python</text>
+            <path class="wire hot" d="M146,94 H246" marker-end="url(#m2)"/>
+            <text class="hotlab" x="190" y="86" text-anchor="middle">:8080</text>
+            <rect class="interp" x="230" y="16" width="174" height="158" rx="10"/>
+            <text class="corelab" x="246" y="40">DYALOG</text>
+            <rect class="hotbox" x="248" y="70" width="140" height="40" rx="8"/>
+            <text class="t" x="318" y="95" text-anchor="middle">Jarvis</text>
+            <path class="wire hot" d="M318,110 V126" marker-end="url(#m2)"/>
+            <rect class="box" x="248" y="128" width="140" height="36" rx="8"/>
+            <text class="t" x="318" y="151" text-anchor="middle">your code</text>
+          </svg>
