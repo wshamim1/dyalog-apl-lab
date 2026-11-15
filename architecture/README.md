@@ -88,10 +88,17 @@ they sit in different places:
   inside a small Linux virtual machine. That's how the Linux build of
   Dyalog runs natively on an Intel Mac.
 
+## Other languages
+
+Python, C#, C and C++ can all work with Dyalog: Python as a separate program
+over RIDE or HTTP, and .NET or C code inside Dyalog via `⎕USING` and `⎕NA`.
+See [other-languages.md](other-languages.md).
+
 ## Files in this folder
 
 | File | What |
 | --- | --- |
+| [other-languages.md](other-languages.md) | how Python, C#, C and C++ connect to Dyalog |
 | [architecture.svg](architecture.svg) | the main diagram (adapts to GitHub's light and dark themes) |
 | [jarvis-sketch.svg](jarvis-sketch.svg), [jarvis-actual.svg](jarvis-actual.svg) | the Jarvis comparison |
 

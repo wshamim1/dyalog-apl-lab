@@ -18,7 +18,8 @@ Python, OpenAI, Streamlit, MySQL and Kafka.*
 One Dyalog interpreter runs in a container. You reach it from a **terminal**,
 from **RIDE** or Python over the RIDE port, or over **HTTP** through Jarvis,
 which runs inside it. See [architecture/](architecture/README.md) for the full
-explanation.
+explanation, and [other languages](architecture/other-languages.md) for how
+Python, C#, C and C++ connect to Dyalog.
 
 ## What's inside
 
