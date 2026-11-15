@@ -158,10 +158,10 @@
           <rect class="interp" x="40" y="946" width="260" height="50" rx="8"/>
           <text class="t" x="170" y="966" text-anchor="middle">its own Dyalog APL 21</text>
           <text class="s" x="170" y="983" text-anchor="middle">runs the notebook cells</text>
-          <path class="wire" d="M170,814 V860" marker-end="url(#a)"/>
-          <text class="lab" x="178" y="842">HTTP :8888</text>
-          <path class="wire" d="M170,912 V944" marker-end="url(#a)"/>
-          <text class="lab" x="178" y="933">RIDE</text>
+          <path class="wire" d="M250,814 V860" marker-end="url(#a)"/>
+          <text class="lab" x="258" y="848">:8888</text>
+          <path class="wire" d="M250,912 V944" marker-end="url(#a)"/>
+          <text class="lab" x="258" y="933">RIDE</text>
 
           <!-- Right side: MySQL and the repo folder -->
           <rect class="box" x="930" y="440" width="190" height="56" rx="8"/>
