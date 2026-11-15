@@ -30,7 +30,8 @@ APL uses special symbols (glyphs) such as `⍳ ⍴ ← ⍵`.
   from these notes, or install the Dyalog keyboard layout from
   <https://www.dyalog.com/apl-font-keyboard.htm>.
 
-The ones you'll use most often:
+For every glyph, with its meaning and an example, see the
+[glyph cheat sheet](../../cheatsheet/README.md). The ones you'll use most often:
 
 | Glyph | Name | RIDE keys | | Glyph | Name | RIDE keys |
 | --- | --- | --- | --- | --- | --- | --- |

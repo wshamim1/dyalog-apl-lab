@@ -19,6 +19,9 @@ type in and exercises with solutions.
 | 10 | [Workspaces and files](10-workspaces-files/README.md) | `)save`, `]load`, `⎕NGET ⎕NPUT ⎕CSV ⎕JSON`, `⎕IO` |
 | 11 | [Tradfns and control](11-tradfns-and-control/README.md) | headers, `:If :For :While :Select :Trap` |
 
+Keep the [glyph cheat sheet](../cheatsheet/README.md) open alongside: every
+glyph with its name, RIDE key, meanings and an example.
+
 ## How to use these
 
 1. Start a session (see [install/dyalog](../install/dyalog/README.md)):

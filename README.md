@@ -16,6 +16,7 @@ Python, OpenAI, Streamlit and MySQL.*
 | | |
 | --- | --- |
 | 📚 **[Tutorials](tutorials/README.md)** | 12 lessons from first steps to classes and control structures, each with exercises and solutions. Every output shown was produced by Dyalog 21. |
+| 🔣 **[Glyph cheat sheet](cheatsheet/README.md)** | What a glyph is, how to type each one, and every glyph with its meanings and a real example |
 | 📜 **[Sample scripts](sample-scripts/README.md)** | Small runnable programs: primes, strings, statistics, Game of Life, a CSV report… |
 | 🗂️ **[File types](sample-scripts/file-types/README.md)** | One example of each Dyalog file type: `.apls .aplf .aplo .apln .aplc .apli .apla .dyapp .dws` |
 | ⌨️ **[`dyalog` command](install/dyalog/README.md#the-dyalog-command)** | Run Dyalog and APL files from any folder, on any Mac (including Intel), using a container |
@@ -124,6 +125,7 @@ dyalog ride                                                   # terminal 1
 
 ```
 tutorials/              12 lessons (00–11) with exercises: start here
+cheatsheet/             every glyph: name, RIDE key, meanings, examples (built by build.py)
 sample-scripts/         runnable .apls programs, plus poem.txt and sales.csv data
   file-types/           one example of every Dyalog file type (with tests/)
 testing/                the test framework (Tester.apln) and an example
