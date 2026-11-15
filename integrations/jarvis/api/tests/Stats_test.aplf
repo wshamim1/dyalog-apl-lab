@@ -1,0 +1,10 @@
+ Stats_test;r;req
+ r←Stats 2 4 4 4 5 5 7 9
+ 8 ExpectEq r.count
+ 5 ExpectEq r.mean
+ 4.5 ExpectEq r.median
+ (2 9)ExpectEq r.(min max)
+ 2 ExpectNear r.sd
+ req←⎕NS ⍬ ⋄ req.status←200 ⋄ req.⎕FX'Fail s' 'status←s'
+ {}req Stats ⍬
+ 400 ExpectEq req.status

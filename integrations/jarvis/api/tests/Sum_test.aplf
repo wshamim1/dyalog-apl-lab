@@ -1,0 +1,4 @@
+ Sum_test
+ 10 ExpectEq Sum 1 2 3 4
+ 0 ExpectEq Sum ⍬
+ 11 ExpectError'Sum ''a'' ''b'''   ⍝ text can't be summed (Jarvis answers 500)

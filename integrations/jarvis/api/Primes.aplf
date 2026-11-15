@@ -1,0 +1,17 @@
+ r←{req}Primes n;sieve;k
+⍝ POST /Primes   body: 30   →   [2,3,5,7,11,13,17,19,23,29]
+⍝ Sieve of Eratosthenes up to n (2 to 1000000). Bad input gets HTTP 400
+⍝ with an error message (req is Jarvis's request object, when called by Jarvis).
+ :If ~(⍬≡⍴n)∧{0::0 ⋄ (⍵=⌊⍵)∧(2≤⍵)∧⍵≤1e6}n
+     :If 0≠⎕NC'req' ⋄ req.Fail 400 ⋄ :EndIf
+     r←⎕NS ⍬
+     r.error←'send a whole number from 2 to 1000000, e.g. 30'
+     :Return
+ :EndIf
+ sieve←0,1↓n⍴1                            ⍝ 1 = "might be prime"; 1 isn't
+ :For k :In 1↓⍳⌊n*0.5
+     :If sieve[k]
+         sieve[k×1↓⍳⌊n÷k]←0               ⍝ cross out multiples of k
+     :EndIf
+ :EndFor
+ r←⍸sieve

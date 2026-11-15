@@ -1,0 +1,18 @@
+ r←{req}WordCount body;text;top;words;counts;rows
+⍝ POST /WordCount   body: {"text":"the cat and the hat", "top":2}
+⍝   →  [{"count":2,"word":"the"},{"count":1,"word":"cat"}]
+⍝ "top" is optional (default 10). Returns a list of objects.
+ :Trap 0
+     text←⎕C body.text
+     top←{0::10 ⋄ ⍵.top}body
+ :Else
+     :If 0≠⎕NC'req' ⋄ req.Fail 400 ⋄ :EndIf
+     r←⎕NS ⍬
+     r.error←'send an object with "text", e.g. {"text":"to be or not to be"}'
+     :Return
+ :EndTrap
+ words←(text∊⎕C ⎕A)⊆text                  ⍝ runs of letters
+ :If 0=≢words ⋄ r←⍬ ⋄ :Return ⋄ :EndIf
+ counts←words{⍺,≢⍵}⌸words
+ rows←↓(top⌊≢counts)↑counts[⍒counts[;2];]
+ r←{ns←⎕NS ⍬ ⋄ ns.(word count)←⍵ ⋄ ns}¨rows

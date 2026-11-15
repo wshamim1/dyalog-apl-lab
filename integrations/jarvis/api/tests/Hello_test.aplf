@@ -1,0 +1,6 @@
+ Hello_test;body
+⍝ Endpoints are plain APL functions, so they can be tested without a server.
+ body←⎕NS ⍬ ⋄ body.name←'Ann'
+ 'Hello, Ann!'ExpectEq(Hello body).message
+ 'Hello, world!'ExpectEq(Hello ⎕NS ⍬).message    ⍝ no name
+ 'Hello, world!'ExpectEq(Hello'').message         ⍝ no body at all

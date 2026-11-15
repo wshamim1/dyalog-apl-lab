@@ -1,0 +1,9 @@
+ Hello←{
+     ⍝ POST /Hello   body: {"name":"Ann"}   →   {"message":"Hello, Ann!"}
+     ⍝ The simplest endpoint: the JSON body arrives as ⍵ (an object becomes
+     ⍝ a namespace), and the result is sent back as JSON.
+     name←{0::'world' ⋄ ⍵.name}⍵         ⍝ no name given? greet the world
+     r←⎕NS ⍬
+     r.message←'Hello, ',name,'!'
+     r
+ }

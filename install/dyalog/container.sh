@@ -149,6 +149,8 @@ case "${1:-}" in
     tty=(); [ -t 0 ] && [ -t 1 ] && tty=(-t)
     # EXTRA_MOUNT (host:container[:ro]) mounts one more folder, e.g. helpers
     extra=(); [ -n "${EXTRA_MOUNT:-}" ] && extra=(-v "$EXTRA_MOUNT")
+    # PORTS ("8080:8080 9000:9000") publishes ports, e.g. for a web server script
+    for p in ${PORTS:-}; do extra+=(-p "$p"); done
     # dyalogscript ends lines with \r\n on a terminal but a bare \r otherwise.
     # Normalise both to \n (awk also adds a missing final newline), and keep
     # dyalogscript's exit code.

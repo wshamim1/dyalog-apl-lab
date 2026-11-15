@@ -1,0 +1,13 @@
+ Primes_test;req
+ (2 3 5 7 11 13 17 19 23 29)ExpectEq Primes 30
+ (,2)ExpectEq Primes 2
+ 78498 ExpectEq≢Primes 1000000           ⍝ the known count of primes below a million
+ 999983 ExpectEq⊃⌽Primes 1000000
+⍝ Bad input: called by Jarvis, ⍺ is the request object, and Primes calls
+⍝ req.Fail 400. A small stand-in ("mock") records the status for us.
+ req←⎕NS ⍬ ⋄ req.status←200
+ req.⎕FX'Fail s' 'status←s'
+ ExpectTrue 0<≢(req Primes 1).error
+ 400 ExpectEq req.status
+ req.status←200 ⋄ {}req Primes'abc'
+ 400 ExpectEq req.status

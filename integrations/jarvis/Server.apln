@@ -1,0 +1,40 @@
+:Namespace Server
+⍝ Serve the functions in api/ as a JSON web API with Jarvis.
+⍝ Each api/Name.aplf becomes  POST /Name  (JSON in → APL → JSON out).
+⍝
+⍝ Started by serve.sh, which runs Dyalog with LOAD=this file: Dyalog then
+⍝ calls Server.Run. (A session prints output as it happens; a dyalogscript
+⍝ script only prints when it ends, and a server never ends.)
+⍝
+⍝ Environment: PORT (default 8080).
+
+    ∇ Run;here;port;names;types;j;rc;msg;Env
+      ⎕PW←500                                  ⍝ don't wrap log lines at 80 columns
+      Env←{2⎕NQ'.' 'GetEnvironment'⍵}
+      here←⊃1⎕NPARTS Env'LOAD'                 ⍝ folder of this file
+      port←{0=≢⍵:8080 ⋄ ⊃⊃(//⎕VFI ⍵)}Env'PORT'
+
+      {}#.⎕FIX'file://',here,'vendor/Jarvis.dyalog'
+
+      ⍝ Load only the top level of api/ (not api/tests/), so nothing but
+      ⍝ the endpoint functions is exposed.
+      #.api←#.⎕NS''
+      (names types)←0 1(⎕NINFO⍠1)here,'api/*.aplf'
+      {}{2 #.api.⎕FIX'file://',⍵}¨names
+
+      j←#.Jarvis.New''
+      j.CodeLocation←#.api
+      j.Port←port
+      ⍝ Run the server loop in this thread: Start blocks and keeps serving.
+      j.DYALOG_JARVIS_THREAD←0
+
+      ⎕←''
+      ⎕←'Jarvis is serving on port ',(⍕port),'. Endpoints (POST, JSON body):'
+      ⎕←↑{'  /',⍵}¨#.api.⎕NL ¯3
+      ⎕←'Try:  curl -s -X POST localhost:',(⍕port),'/Primes -H ''Content-Type: application/json'' -d 30'
+      ⎕←'Stop: Ctrl+C in this terminal (or `podman stop` the container).'
+      ⎕←''
+      (rc msg)←j.Start                      ⍝ blocks while serving
+      ⎕←'Jarvis stopped: ',⍕rc msg
+    ∇
+:EndNamespace

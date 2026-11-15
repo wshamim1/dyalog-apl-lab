@@ -1,0 +1,8 @@
+ WordCount_test;body;r
+ body←⎕NS ⍬ ⋄ body.text←'The cat and the hat and THE bat' ⋄ body.top←2
+ r←WordCount body
+ 2 ExpectEq≢r
+ ('the' 3)ExpectEq r[1].(word count)    ⍝ case-insensitive
+ ('and' 2)ExpectEq r[2].(word count)
+ body.text←'' ⋄ ⍬ ExpectEq WordCount body
+ ExpectTrue 0<≢(WordCount 1 2).error     ⍝ not an object → error message

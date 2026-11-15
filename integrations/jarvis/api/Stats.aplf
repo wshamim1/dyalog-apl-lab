@@ -1,0 +1,21 @@
+ r←{req}Stats nums;n;s;mean
+⍝ POST /Stats   body: [2,4,4,4,5,5,7,9]
+⍝   →  {"count":8,"max":9,"mean":5,"median":4.5,"min":2,"sd":2}
+⍝ An ambivalent tradfn: Jarvis passes its request object as the left
+⍝ argument, which we use to answer 400 Bad Request for bad input. Tests
+⍝ can call it with no left argument.
+ r←⎕NS ⍬
+ :If ~(1=≢⍴nums)∧(0<≢nums)∧{0::0 ⋄ ∧/⍵=⍵+0}nums
+     :If 0≠⎕NC'req' ⋄ req.Fail 400 ⋄ :EndIf
+     r.error←'send a non-empty list of numbers, e.g. [1,2,3]'
+     :Return
+ :EndIf
+ n←≢nums
+ s←nums[⍋nums]
+ mean←(+/nums)÷n
+ r.count←n
+ r.mean←mean
+ r.median←(+/s[(⌈n÷2),1+⌊n÷2])÷2
+ r.min←⌊/nums
+ r.max←⌈/nums
+ r.sd←((+/(nums-mean)*2)÷n)*0.5          ⍝ population standard deviation
