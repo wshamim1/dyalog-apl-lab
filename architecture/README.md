@@ -2,10 +2,13 @@
 
 How every part of this repo connects to Dyalog.
 
-![One Dyalog interpreter in a container. The terminal connects to its session; RIDE and the Python dyalog_ride client connect to its RIDE server on TCP 4502; HTTP clients call Jarvis, which runs inside the workspace and calls your code; SQAPL reaches MySQL over ODBC; the repo folder is mounted at /app.](architecture.svg)
+![The main Dyalog interpreter in a container. The terminal connects to its session; RIDE and the Python dyalog_ride client connect to its RIDE server on TCP 4502; HTTP clients call Jarvis, which runs inside the workspace and calls your code; SQAPL reaches MySQL over ODBC; a Kafka client talks to a Kafka broker in its own container. Bottom left, a separate Jupyter container: the browser talks to JupyterLab on port 8888, whose kernel runs its own Dyalog over RIDE.](architecture.svg)
 
-The shaded box is the **one Dyalog interpreter**. Everything outside it is a
-separate program on your Mac. Orange marks the HTTP path.
+The big shaded box is the **main Dyalog interpreter**. Everything outside it is
+a separate program on your Mac or in another container. Orange marks the HTTP
+path. Bottom left, **Jupyter** runs in its own container with **its own
+Dyalog**: your browser talks to JupyterLab on port 8888, and the kernel drives
+that Dyalog over the RIDE protocol.
 
 ## The core idea: one interpreter, three doors
 
@@ -20,6 +23,10 @@ Mac reach it through one of three doors:
 
 Whichever door is used, the APL runs in the same place: the **workspace**,
 where everything that's loaded lives.
+
+**Jupyter is the exception:** it doesn't use these doors. The notebooks run in
+a separate container whose kernel starts and drives its own Dyalog, so a
+notebook's variables live in that interpreter, not the main one.
 
 ## Inside vs outside
 
