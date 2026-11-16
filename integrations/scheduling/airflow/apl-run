@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# apl-run FILE.apls [args…]: run an APL script and exit with its exit code.
+# Airflow tasks call this instead of dyalogscript directly, because without a
+# terminal dyalogscript ends lines with a bare \r, which Airflow's log shows
+# as one long line. This turns them into \n and keeps the exit code.
+set -o pipefail
+[ -n "${1:-}" ] || { echo "usage: apl-run FILE.apls [args…]" >&2; exit 2; }
+[ -f "$1" ] || { echo "apl-run: no such file: $1" >&2; exit 2; }
+dyalogscript "$@" </dev/null | awk '{ sub(/\r$/, ""); gsub(/\r/, "\n"); print; fflush() }'

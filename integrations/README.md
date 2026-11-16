@@ -10,11 +10,13 @@ Ways to connect Dyalog APL to other systems.
 | [jarvis/](jarvis/README.md) | HTTP JSON API: APL functions become `POST` endpoints any language can call (Jarvis) | ready |
 | `mcp_server/` | MCP tools (`apl_eval`, `apl_load`, `apl_reset`) for Claude Code, Claude Desktop and other clients | planned |
 | [kafka/](kafka/README.md) | Produce and consume Kafka messages from APL; a stream processor keeping running totals with `⌸` | ready |
+| [scheduling/](scheduling/README.md) | Run APL scripts on a schedule: a cron wrapper (logs, locking, exit codes) and a local Airflow with Dyalog inside it | ready |
 
 ## Architecture
 
 Integrations that drive Dyalog *from outside* (Python, Streamlit) share one
-client, `dyalog_ride`. Jarvis, Kafka and the APL MySQL functions run *inside* Dyalog.
+client, `dyalog_ride`. Jarvis, Kafka and the APL MySQL functions run *inside* Dyalog. Scheduling
+runs scripts with `dyalogscript`, in the Dyalog container (cron) or inside the Airflow image.
 Dashed boxes are planned.
 
 ```mermaid
@@ -23,6 +25,7 @@ flowchart LR
         st["streamlit_app<br/>web UI + OpenAI"]
         mcp["mcp_server<br/>(planned)"]:::planned
         kafka["kafka<br/>stream processing"]
+        sched["scheduling<br/>cron + Airflow"]
         mysqlint["mysql<br/>MySQL bridge"]
         jarvis["jarvis<br/>HTTP API"]
         ride["dyalog_ride<br/>RIDE protocol client"]
@@ -31,12 +34,14 @@ flowchart LR
     browser(["Browser"]) --> st
     llmclients(["Claude Code /<br/>Claude Desktop"]) -.-> mcp
     kafka <--> topics[("Kafka broker")]
+    cronaf(["cron / Airflow"]) --> sched
     st --> openai["☁️ OpenAI"]
     mysqlint <--> mysqldb[("MySQL")]
 
     st --> ride
     mcp -.-> ride
     kafka --> dyalog
+    sched --> dyalog
     mysqlint --> ride
     apps(["Any app<br/>curl / Python / JS"]) -- "HTTP :8080" --> jarvis
     jarvis --> dyalog

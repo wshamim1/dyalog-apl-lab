@@ -2,7 +2,7 @@
 
 How every part of this repo connects to Dyalog.
 
-![The main Dyalog interpreter in a container. The terminal connects to its session; RIDE and the Python dyalog_ride client connect to its RIDE server on TCP 4502; HTTP clients call Jarvis, which runs inside the workspace and calls your code; SQAPL reaches MySQL over ODBC; a Kafka client talks to a Kafka broker in its own container. Bottom left, a separate Jupyter container: the browser talks to JupyterLab on port 8888, whose kernel runs its own Dyalog over RIDE. Bottom, dcf-tools starts a separate Dyalog container for each command, with .dcf folders mounted read-only, and reads back JSON or text. Top left, code-map reads APL source as text and needs no Dyalog.](architecture.svg)
+![The main Dyalog interpreter in a container. The terminal connects to its session; RIDE and the Python dyalog_ride client connect to its RIDE server on TCP 4502; HTTP clients call Jarvis, which runs inside the workspace and calls your code; SQAPL reaches MySQL over ODBC; a Kafka client talks to a Kafka broker in its own container. Bottom left, a separate Jupyter container: the browser talks to JupyterLab on port 8888, whose kernel runs its own Dyalog over RIDE. Bottom, dcf-tools starts a separate Dyalog container for each command, with .dcf folders mounted read-only, and reads back JSON or text; cron starts scheduled jobs the same way through run-job.sh. At the very bottom, a local Airflow runs APL tasks with its own Dyalog inside the Airflow image and keeps run history in Postgres. Top left, code-map reads APL source as text and needs no Dyalog.](architecture.svg)
 
 The big shaded box is the **main Dyalog interpreter**. Everything outside it is
 a separate program on your Mac or in another container. Orange marks the HTTP
@@ -10,7 +10,10 @@ path. Bottom left, **Jupyter** runs in its own container with **its own
 Dyalog**: your browser talks to JupyterLab on port 8888, and the kernel drives
 that Dyalog over the RIDE protocol. Along the bottom, **dcf-tools** starts a
 short-lived Dyalog container for each command (see
-[one container per command](#a-fourth-pattern-one-container-per-command)).
+[one container per command](#a-fourth-pattern-one-container-per-command)),
+and **cron** starts scheduled jobs the same way. At the very bottom,
+**Airflow** runs in its own containers with **its own Dyalog** (see
+[scheduled jobs](#scheduled-jobs-cron-and-airflow)).
 Top left, **code-map** reads APL source as plain text and needs no Dyalog at
 all.
 
@@ -45,8 +48,8 @@ dcf.py / viewer ── podman run … dyalogscript dcf.apls diff OLD NEW ──�
        └───────────────────────── JSON / text ◄──────────────────────────┘ then exits
 ```
 
-`dyalog FILE.apls` and `dyalog test` work the same way: a script runs, then
-the container is gone.
+`dyalog FILE.apls`, `dyalog test` and cron jobs work the same way: a script
+runs, then the container is gone.
 
 | | Live session (RIDE) | One container per command | Jarvis (HTTP) |
 | --- | --- | --- | --- |
@@ -54,7 +57,30 @@ the container is gone.
 | Start-up cost | once | about 1 second per call | once |
 | Files it can see | what's mounted at `/app` | only the folders it was given, read-only | what's mounted at `/app` |
 | Left running | the container | nothing | the container |
-| Used by | RIDE, APL Playground, MySQL bridge | dcf-tools, `dyalog FILE.apls`, `dyalog test` | the HTTP API |
+| Used by | RIDE, APL Playground, MySQL bridge | dcf-tools, `dyalog FILE.apls`, `dyalog test`, cron jobs | the HTTP API |
+
+## Scheduled jobs: cron and Airflow
+
+[Scheduling](../integrations/scheduling/README.md) runs APL scripts with
+nobody at the keyboard. Both schedulers use the same, unchanged `.apls`
+script. All they look at is its **exit code** (`⎕OFF n`).
+
+| | cron | Airflow |
+| --- | --- | --- |
+| Where Dyalog runs | a fresh Dyalog container per run (the pattern above) | inside the Airflow image: `/opt/mdyalog` is copied in, so a task just runs `dyalogscript` |
+| Started by | `run-job.sh` (lock, one log per run, exit code) | the `run_apl` task: exit 2 fails at once, other failures are retried |
+| State and history | log files in `scheduling/output/logs/` | Postgres (runs, task states); UI on :8088 |
+| Containers left running | none | two (Airflow, Postgres) while it's up |
+
+```
+cron ── run-job.sh ── dyalog FILE.apls ──► Dyalog (fresh) ──► reports · logs
+Airflow scheduler ── run_apl task ── apl-run ──► Dyalog (same container) ──► reports · XCom
+```
+
+Airflow doesn't start Dyalog containers through a Docker socket. That would
+mean giving Airflow control of the container engine, and fragile host-path
+mounts on a Mac. Instead the interpreter lives in the Airflow image, which
+works because Dyalog needs only libc.
 
 ### Choosing a way in
 
@@ -64,6 +90,9 @@ the container is gone.
   simple, can't leave anything behind, can be given read-only access, and a
   crash affects one call only. The cost is a second of start-up per call, so
   cache results (the dcf viewer caches by file time and size).
+- **A scheduler** (cron, or Airflow when jobs depend on each other) for
+  work that runs at set times; it is one container per command, triggered by
+  the clock.
 - **Jarvis** when other programs call APL as a service: many callers, a
   stable API, and no RIDE client needed.
 - **No Dyalog at all** when reading the source is enough:
@@ -81,6 +110,7 @@ the container is gone.
 | **Tester**: the test framework | curl, browsers, other apps |
 | **DCF.apln**: reads and compares component files (dcf-tools) | MySQL, OpenAI |
 | | dcf-tools (`dcf.py`, viewer), code-map |
+| | cron, Airflow (its own containers, with Dyalog inside) |
 
 ### A common mix-up: Jarvis is inside
 
@@ -112,6 +142,8 @@ they sit in different places:
 | MySQL from APL | `]load …/MySQL*.aplf` | SQAPL → ODBC → MySQL :3307 | queries from inside APL | [mysql/apl](../integrations/mysql/apl/README.md) |
 | Kafka from APL | `integrations/kafka/kafka.sh run …` | Kafka client → broker :19092 | producing and consuming event streams | [kafka](../integrations/kafka/README.md) |
 | Component file tools | `python3 dcf-tools/dcf.py …`, or the viewer | one container per command · read-only mounts | viewing, diffing, suggesting SQL tables | [dcf-tools](../dcf-tools/README.md) |
+| Scheduled job (cron) | `integrations/scheduling/cron/cron.sh add "0 6 * * *" FILE.apls` | one container per run, via `run-job.sh` | reports and loads at set times | [scheduling](../integrations/scheduling/README.md#cron) |
+| Airflow | `integrations/scheduling/airflow/airflow.sh up` | Dyalog inside the Airflow image · UI :8088 | pipelines with dependencies, retries, history | [scheduling](../integrations/scheduling/README.md#airflow) |
 | Code map | `python3 sample-scripts/component-files/code-map.py` | none: reads source as text | which code touches which file | [code-map](../sample-scripts/component-files/README.md#a-map-of-the-code) |
 
 ## Good to know
@@ -133,6 +165,9 @@ they sit in different places:
   each folder it needs read-only, and maps container paths back to your own
   paths in messages. With a native Dyalog, `DYALOGSCRIPT=…` skips the
   container entirely.
+- **Airflow has its own Dyalog.** Like Jupyter, it doesn't use the main
+  interpreter. Its tasks run Dyalog inside the Airflow container, with the
+  repo mounted read-only at `/apl`.
 - **The container runs in Podman's Linux VM.** On a Mac, containers run
   inside a small Linux virtual machine. That's how the Linux build of
   Dyalog runs natively on an Intel Mac.

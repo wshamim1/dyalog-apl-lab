@@ -1,0 +1,70 @@
+⍝ Daily sales report: an APL batch job meant to be run by a scheduler
+⍝ (cron, Airflow, launchd…), not by a person at a terminal.
+⍝
+⍝ Usage:  daily-report.apls [DATE] [INPUT.csv] [OUTDIR]
+⍝   DATE     the day the report is for, YYYY-MM-DD   (default: today)
+⍝   INPUT    sales CSV: region,product,qty,price     (default: data/sales.csv)
+⍝   OUTDIR   where reports go                        (default: $REPORT_DIR, else ../output/reports)
+⍝
+⍝ Writes OUTDIR/sales-DATE.txt and OUTDIR/sales-DATE.json. Running it twice for
+⍝ the same DATE overwrites the same files, so a retried run is harmless.
+⍝
+⍝ Exit codes (what the scheduler sees):
+⍝   0  report written
+⍝   2  bad input: missing file, missing columns, bad numbers, bad date
+⍝   1  anything else went wrong (the error is logged)
+
+⎕FIX'file://',{0=≢⍵:'/apl-lib/Lib.apln' ⋄ ⍵}2⎕NQ'.' 'GetEnvironment' 'APL_LIB'
+L←Lib.Log ⋄ S←Lib.Sys ⋄ F←Lib.Fmt ⋄ D←Lib.Date
+
+⍝ Main: arguments → exit code. Problems with the input return 2; any other
+⍝ error is caught by the guard in Run below and becomes 1.
+Main←{
+    here←S.ScriptDir ⍬                          ⍝ …/scheduling/job/
+    up←⊃1⎕NPARTS ¯1↓here                        ⍝ …/scheduling/
+    (date in out)←⍵,(≢⍵)↓(D.Today ⍬)(here,'data/sales.csv')((up,'output/reports')S.Env'REPORT_DIR')
+    ~D.IsValid date:2⊣'job'L.Error'not a date (want YYYY-MM-DD): ',date
+    ~S.Exists in:2⊣'job'L.Error'input not found: ',in
+    _←'job'L.Info'report for ',date,' from ',in
+    (data header)←⎕CSV in''4 1                    ⍝ 4: numbers as numbers; 1: header row
+    need←'region' 'product' 'qty' 'price'
+    0<≢miss←need~header:2⊣'job'L.Error'missing columns: ',', 'Lib.Str.Join miss
+    0=≢data:2⊣'job'L.Error'no rows in ',in
+    (region product qty price)←↓⍉data[;header⍳need]
+    num←{0=⊃0⍴⍵}                                ⍝ 1 for a number (an unparsed field stays text)
+    bad←qty{~(num ⍺)∧num ⍵:1 ⋄ (⍺≤0)∨⍵<0}¨price
+    ∨/bad:2⊣'job'L.Error'bad qty/price on data row(s): ',⍕⍸bad
+    amount←qty×price
+
+    ⍝ the report
+    byRegion←region{(⊃⍺)(≢⍵)(2 Lib.Stats.Round+/⍵)}⌸amount   ⍝ ⊃⍺: ⌸ gives each key enclosed
+    byRegion←byRegion[⍒byRegion[;3];]
+    p←product{(⊃⍺)(+/⍵)}⌸qty
+    best←⊃p[⊃⍒p[;2];1]                           ⍝ by quantity sold
+    lines←⊂'Sales report for ',date,' (',(D.Weekday date),')'
+    lines,←⊂'Generated ',(S.Now ⍬),' from ',(∊1↓1⎕NPARTS in)
+    lines,←⊂''
+    lines,←⊂'Orders:        ',⍕≢amount
+    lines,←⊂'Revenue:       ',F.Money+/amount
+    lines,←⊂'Best seller:   ',best
+    lines,←⊂''
+    lines,←{(8↑⊃⍵),(4 F.PadL⍕2⊃⍵),' orders',12 F.PadL F.Money 3⊃⍵}¨↓byRegion
+
+    rec←'date' 'orders' 'revenue' 'best_seller' 'regions'Lib.Data.Record date(≢amount)(2 Lib.Stats.Round+/amount)best({'region' 'orders' 'revenue'Lib.Data.Record ⍵}¨↓byRegion)
+
+    ⍝ write the files: to a temporary name first, then rename, so a reader
+    ⍝ never sees a half-written report
+    _←3 ⎕MKDIR out
+    base←out,'/sales-',date
+    Put←{t←⍵,'.tmp' ⋄ _←(⊂⍺)⎕NPUT t 1 ⋄ _←{⎕NEXISTS ⍵:⎕NDELETE ⍵ ⋄ 0}⍵ ⋄ _←⍵ ⎕NMOVE t ⋄ ⍵}
+    _←(⊃,/lines,¨⎕UCS 10)Put base,'.txt'
+    _←((⎕UCS 10)@(=∘(⎕UCS 13))1 Lib.Data.ToJSON rec)Put base,'.json'   ⍝ ⎕JSON breaks lines with CR
+    _←{⎕←⍵}¨lines
+    _←'job'L.Info'wrote ',base,'.txt and .json'
+    0
+}
+
+⍝ Run Main; turn an unexpected error into exit code 1 with the error logged.
+Run←{0::1⊣'job'L.Error Lib.Err.Text ⍬ ⋄ Main ⍵}
+code←Run S.Args ⍬
+⎕OFF code      ⍝ not ⎕OFF Run …: ⎕OFF quits before evaluating a function call on its right

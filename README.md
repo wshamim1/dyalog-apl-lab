@@ -2,7 +2,7 @@
 
 *Thinking in arrays with [Dyalog APL](https://www.dyalog.com): tutorials,
 runnable scripts, a `dyalog` command-line tool, and integrations with
-Python, OpenAI, Streamlit, MySQL and Kafka.*
+Python, OpenAI, Streamlit, MySQL, Kafka, cron and Airflow.*
 
 ```apl
       +/⍳100                       ⍝ sum of 1 to 100
@@ -13,7 +13,7 @@ Python, OpenAI, Streamlit, MySQL and Kafka.*
 
 ## How it fits together
 
-![One Dyalog interpreter in a container, reached three ways: a terminal session, RIDE and Python over the RIDE port 4502, and HTTP clients through Jarvis on port 8080. Jarvis, SQAPL and your code all run inside the workspace.](architecture/architecture.svg)
+![One Dyalog interpreter in a container, reached three ways: a terminal session, RIDE and Python over the RIDE port 4502, and HTTP clients through Jarvis on port 8080. Jarvis, SQAPL and your code all run inside the workspace. Below, scheduled jobs: cron starts a fresh Dyalog container per run, and a local Airflow runs APL tasks with its own Dyalog.](architecture/architecture.svg)
 
 One Dyalog interpreter runs in a container. You reach it from a **terminal**,
 from **RIDE** or Python over the RIDE port, or over **HTTP** through Jarvis,
@@ -34,7 +34,7 @@ Python, C#, C and C++ connect to Dyalog.
 | 🧰 **[Shared library](lib/README.md)** | `Lib`: common helpers for text, statistics, JSON, formatting, errors, dates and logging, loaded with one line from any folder |
 | 🧪 **[Testing](testing/README.md)** | A small APL test framework: write `*_test.aplf` files, run `dyalog test` |
 | 🗂️ **[Component file viewer and diff](dcf-tools/README.md)** | Look inside `.dcf` files and see exactly what changed between two versions (component, field, cell), from the command line or a web page |
-| 🔌 **[Integrations](integrations/README.md)** | Drive Dyalog from Python, ask questions in plain English (OpenAI + Streamlit), read and write MySQL from Python or from APL itself |
+| 🔌 **[Integrations](integrations/README.md)** | Drive Dyalog from Python, ask questions in plain English (OpenAI + Streamlit), read and write MySQL from Python or from APL itself, run APL jobs on a schedule with cron or Airflow |
 
 ## Quick start
 

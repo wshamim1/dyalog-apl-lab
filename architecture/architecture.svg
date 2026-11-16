@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1150" viewBox="0 0 1150 1220" role="img" aria-label="One Dyalog interpreter runs in a container. A terminal connects to its session; RIDE and the Python dyalog_ride client connect to its RIDE server on TCP 4502; HTTP clients call Jarvis, which runs inside the workspace and calls your code; SQAPL inside the workspace reaches MySQL over ODBC; the repo folder is mounted at /app. Below, dcf-tools starts a separate Dyalog container for each command, with .dcf folders mounted read-only, and reads back JSON or text; the container exits when done. Top left, code-map reads APL source as plain text and needs no Dyalog.">
+<svg xmlns="http://www.w3.org/2000/svg" width="1150" viewBox="0 0 1150 1520" role="img" aria-label="One Dyalog interpreter runs in a container. A terminal connects to its session; RIDE and the Python dyalog_ride client connect to its RIDE server on TCP 4502; HTTP clients call Jarvis, which runs inside the workspace and calls your code; SQAPL inside the workspace reaches MySQL over ODBC; the repo folder is mounted at /app. Below, dcf-tools starts a separate Dyalog container for each command, with .dcf folders mounted read-only, and reads back JSON or text; the container exits when done; cron starts scheduled jobs the same way, through run-job.sh, and they write reports and logs. At the very bottom, a local Airflow (Docker compose) runs APL tasks with its own Dyalog copied into the Airflow image, keeps its run history in Postgres, and mounts the repo read-only. Top left, code-map reads APL source as plain text and needs no Dyalog.">
           <defs>
             <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
             <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-hot" d="M0,0 L10,5 L0,10 z"/></marker>
@@ -173,12 +173,12 @@
           <rect class="box" x="40" y="1072" width="220" height="64" rx="8"/>
           <text class="t" x="150" y="1098" text-anchor="middle">dcf-tools</text>
           <text class="s" x="150" y="1116" text-anchor="middle">dcf.py · viewer :8503</text>
-          <rect class="region" x="340" y="1040" width="540" height="150" rx="14"/>
+          <rect class="region" x="340" y="1040" width="540" height="230" rx="14"/>
           <text class="regionlab" x="356" y="1064">ONE CONTAINER PER COMMAND · EXITS WHEN DONE</text>
           <rect class="interp" x="380" y="1080" width="240" height="64" rx="10"/>
           <text class="t" x="500" y="1106" text-anchor="middle">Dyalog · dyalogscript</text>
           <text class="s" x="500" y="1124" text-anchor="middle">dcf.apls + DCF.apln</text>
-          <text class="lab" x="380" y="1172">no session kept: each view, diff or dump starts fresh (about 1 s)</text>
+          <text class="lab" x="380" y="1256">no session kept: each command or job starts fresh (about 1 s)</text>
           <path class="wire" d="M260,1094 H378" marker-end="url(#a)"/>
           <text class="lab" x="319" y="1086" text-anchor="middle">starts</text>
           <path class="wire" d="M378,1122 H262" marker-end="url(#a)"/>
@@ -188,6 +188,51 @@
           <text class="s" x="1025" y="1124" text-anchor="middle">any folder on your Mac</text>
           <path class="wire" d="M930,1112 H622" marker-end="url(#a)"/>
           <text class="lab" x="776" y="1104" text-anchor="middle">mounted read-only</text>
+
+          <!-- Scheduled jobs with cron: same pattern, one container per run -->
+          <rect class="box" x="40" y="1164" width="220" height="64" rx="8"/>
+          <text class="t" x="150" y="1190" text-anchor="middle">cron → run-job.sh</text>
+          <text class="s" x="150" y="1208" text-anchor="middle">lock · log per run</text>
+          <rect class="interp" x="380" y="1164" width="240" height="64" rx="10"/>
+          <text class="t" x="500" y="1190" text-anchor="middle">Dyalog · dyalogscript</text>
+          <text class="s" x="500" y="1208" text-anchor="middle">daily-report.apls · any .apls</text>
+          <path class="wire" d="M260,1186 H378" marker-end="url(#a)"/>
+          <text class="lab" x="300" y="1178" text-anchor="middle">on schedule</text>
+          <path class="wire" d="M378,1214 H262" marker-end="url(#a)"/>
+          <text class="lab" x="300" y="1232" text-anchor="middle">exit code</text>
+          <rect class="box" x="930" y="1164" width="190" height="64" rx="8"/>
+          <text class="t" x="1025" y="1190" text-anchor="middle">reports · logs</text>
+          <text class="s" x="1025" y="1208" text-anchor="middle">scheduling/output/</text>
+          <path class="wire" d="M622,1196 H928" marker-end="url(#a)"/>
+          <text class="lab" x="776" y="1188" text-anchor="middle">writes</text>
+
+          <!-- Airflow: its own containers, with its own Dyalog -->
+          <rect class="box" x="40" y="1330" width="220" height="64" rx="8"/>
+          <text class="t" x="150" y="1356" text-anchor="middle">Browser</text>
+          <text class="s" x="150" y="1374" text-anchor="middle">Airflow UI · airflow.sh</text>
+          <rect class="region" x="340" y="1296" width="540" height="204" rx="14"/>
+          <text class="regionlab" x="356" y="1320">AIRFLOW · DOCKER COMPOSE · ITS OWN DYALOG</text>
+          <rect class="box" x="360" y="1336" width="210" height="64" rx="8"/>
+          <text class="t" x="465" y="1362" text-anchor="middle">Airflow standalone</text>
+          <text class="s" x="465" y="1380" text-anchor="middle">scheduler · DAGs · :8088</text>
+          <rect class="interp" x="630" y="1336" width="230" height="64" rx="10"/>
+          <text class="t" x="745" y="1362" text-anchor="middle">Dyalog APL 21</text>
+          <text class="s" x="745" y="1380" text-anchor="middle">apl-run · same image</text>
+          <path class="wire" d="M570,1368 H628" marker-end="url(#a)"/>
+          <text class="lab" x="599" y="1360" text-anchor="middle">tasks</text>
+          <path class="wire" d="M260,1362 H358" marker-end="url(#a)"/>
+          <text class="lab" x="309" y="1354" text-anchor="middle">:8088</text>
+          <rect class="box" x="360" y="1428" width="210" height="50" rx="8"/>
+          <text class="t" x="465" y="1449" text-anchor="middle">Postgres</text>
+          <text class="s" x="465" y="1466" text-anchor="middle">run history</text>
+          <path class="wire" d="M465,1400 V1426" marker-end="url(#a)"/>
+          <text class="lab" x="596" y="1449">exit code → success · retry · fail</text>
+          <text class="lab" x="596" y="1467">no Docker socket: Dyalog is in the image</text>
+          <rect class="box" x="930" y="1336" width="190" height="64" rx="8"/>
+          <text class="t" x="1025" y="1362" text-anchor="middle">repo · output/</text>
+          <text class="s" x="1025" y="1380" text-anchor="middle">on your Mac · /apl ro</text>
+          <path class="wire" d="M928,1368 H862" marker-end="url(#a)"/>
+          <text class="lab" x="895" y="1360" text-anchor="middle">mounted</text>
 
           <!-- Right side: MySQL and the repo folder -->
           <rect class="box" x="930" y="440" width="190" height="56" rx="8"/>
