@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1150" viewBox="0 0 1150 1020" role="img" aria-label="One Dyalog interpreter runs in a container. A terminal connects to its session; RIDE and the Python dyalog_ride client connect to its RIDE server on TCP 4502; HTTP clients call Jarvis, which runs inside the workspace and calls your code; SQAPL inside the workspace reaches MySQL over ODBC; the repo folder is mounted at /app.">
+<svg xmlns="http://www.w3.org/2000/svg" width="1150" viewBox="0 0 1150 1220" role="img" aria-label="One Dyalog interpreter runs in a container. A terminal connects to its session; RIDE and the Python dyalog_ride client connect to its RIDE server on TCP 4502; HTTP clients call Jarvis, which runs inside the workspace and calls your code; SQAPL inside the workspace reaches MySQL over ODBC; the repo folder is mounted at /app. Below, dcf-tools starts a separate Dyalog container for each command, with .dcf folders mounted read-only, and reads back JSON or text; the container exits when done. Top left, code-map reads APL source as plain text and needs no Dyalog.">
           <defs>
             <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
             <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-hot" d="M0,0 L10,5 L0,10 z"/></marker>
@@ -162,6 +162,32 @@
           <text class="lab" x="258" y="848">:8888</text>
           <path class="wire" d="M250,912 V944" marker-end="url(#a)"/>
           <text class="lab" x="258" y="933">RIDE</text>
+
+          <!-- Top left: a tool that needs no Dyalog -->
+          <rect class="box" x="40" y="130" width="220" height="56" rx="8"/>
+          <text class="t" x="150" y="154" text-anchor="middle">code-map</text>
+          <text class="s" x="150" y="172" text-anchor="middle">reads APL source as text</text>
+          <text class="lab" x="150" y="204" text-anchor="middle">no Dyalog needed</text>
+
+          <!-- Bottom: one container per command (dcf-tools) -->
+          <rect class="box" x="40" y="1072" width="220" height="64" rx="8"/>
+          <text class="t" x="150" y="1098" text-anchor="middle">dcf-tools</text>
+          <text class="s" x="150" y="1116" text-anchor="middle">dcf.py · viewer :8503</text>
+          <rect class="region" x="340" y="1040" width="540" height="150" rx="14"/>
+          <text class="regionlab" x="356" y="1064">ONE CONTAINER PER COMMAND · EXITS WHEN DONE</text>
+          <rect class="interp" x="380" y="1080" width="240" height="64" rx="10"/>
+          <text class="t" x="500" y="1106" text-anchor="middle">Dyalog · dyalogscript</text>
+          <text class="s" x="500" y="1124" text-anchor="middle">dcf.apls + DCF.apln</text>
+          <text class="lab" x="380" y="1172">no session kept: each view, diff or dump starts fresh (about 1 s)</text>
+          <path class="wire" d="M260,1094 H378" marker-end="url(#a)"/>
+          <text class="lab" x="319" y="1086" text-anchor="middle">starts</text>
+          <path class="wire" d="M378,1122 H262" marker-end="url(#a)"/>
+          <text class="lab" x="319" y="1140" text-anchor="middle">JSON · text</text>
+          <rect class="box" x="930" y="1080" width="190" height="64" rx="8"/>
+          <text class="t" x="1025" y="1106" text-anchor="middle">.dcf files</text>
+          <text class="s" x="1025" y="1124" text-anchor="middle">any folder on your Mac</text>
+          <path class="wire" d="M930,1112 H622" marker-end="url(#a)"/>
+          <text class="lab" x="776" y="1104" text-anchor="middle">mounted read-only</text>
 
           <!-- Right side: MySQL and the repo folder -->
           <rect class="box" x="930" y="440" width="190" height="56" rx="8"/>
