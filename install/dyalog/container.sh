@@ -44,6 +44,8 @@ if [ -f "$LIB_DIR/Lib.apln" ]; then
   if [ "$ENGINE" = podman ] && [ "$(uname -s)" = Linux ]; then lib_vol="$lib_vol,Z"; fi
   LIB_ARGS=(-v "$lib_vol" -e APL_LIB=/apl-lib/Lib.apln)
 fi
+# Lib.Log reads LOG_LEVEL: pass it in when it's set here.
+[ -n "${LOG_LEVEL:-}" ] && LIB_ARGS+=(-e "LOG_LEVEL=$LOG_LEVEL")
 
 # --- engine setup ------------------------------------------------------------
 install_engine() {

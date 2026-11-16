@@ -1,0 +1,10 @@
+:Namespace Err
+⍝ Raising and catching errors with useful messages
+⍝ Part of the shared library: loaded as Lib.Err by Lib.apln.  Docs: lib/README.md
+    ⎕IO←1 ⋄ ⎕ML←1
+    Fail←{⍺←'' ⋄ ⎕SIGNAL⊂('EN' 11)('Message'(((×≢⍺)/⍺,': '),⍕⍵))}   ⍝ 'MySQLExec' Fail 'lost connection'
+    Signal←{⎕SIGNAL⊂('EN'⍺)('Message'(⍕⍵))}                ⍝ 5 Signal 'lengths differ' (any error number)
+    Assert←{⍺←'assertion failed' ⋄ ∧/,⍵:_←1 ⋄ ⎕SIGNAL⊂('EN' 11)('Message'(⍕⍺))}   ⍝ 'qty must be > 0' Assert qty>0
+    Try←{⍺←⍬ ⋄ 0::⍺ ⋄ ⍺⍺ ⍵}                                ⍝ default (Fn Try) arg: Fn arg, or default on any error
+    Text←{⎕DMX.EM,(×≢⎕DMX.Message)/': ',⎕DMX.Message}      ⍝ the last error, e.g. 'DOMAIN ERROR: qty must be > 0'
+:EndNamespace

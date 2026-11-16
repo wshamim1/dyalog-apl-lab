@@ -19,3 +19,17 @@ len←≢¨words
 r←'file' 'words' 'when' Lib.Data.Record 'poem.txt'(≢words)(Lib.Sys.Now⍬)
 ⎕←Lib.Data.ToJSON r
 ⎕←', ' S.Join Lib.Data.Fields r
+
+⍝ A small report with Fmt, Date, Err and Log
+F←Lib.Fmt ⋄ D←Lib.Date
+'report' Lib.Log.Info 'building the sales report'
+dates←'2026-10-03' '2026-10-17' '2026-11-02' '2026-11-09' '2026-11-16'
+amounts←1250.5 980 2310.75 ¯120 1875.25
+'amounts and dates differ in length' Lib.Err.Assert (≢dates)=≢amounts
+m←(D.Month¨dates){⍺,+/⍵}⌸amounts          ⍝ total per month
+⎕←↑{(⊃⍵),'  ',12 F.PadL F.Money 2⊃⍵}¨↓m
+⎕←(≢dates)F.Plural'sale'
+⎕←'first to last: ',((⊃dates)D.DaysBetween⊃⌽dates)F.Plural'day'
+⎕←'last sale was a ',D.Weekday⊃⌽dates
+bad←'none'(D.Parse Lib.Err.Try)'2026-02-30'
+'report' Lib.Log.Warn 'bad date parses to: ',⍕bad

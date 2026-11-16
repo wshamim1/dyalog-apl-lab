@@ -1,0 +1,16 @@
+:Namespace Str
+⍝ Text
+⍝ Part of the shared library: loaded as Lib.Str by Lib.apln.  Docs: lib/README.md
+    ⎕IO←1 ⋄ ⎕ML←1
+    IsText←{(0=10|⎕DR ⍵)∧1≥|≡⍵}                ⍝ a character scalar or vector?
+    Trim←{⍵/⍨(∨\m)∧⌽∨\⌽m←' '≠⍵}               ⍝ drop leading/trailing blanks
+    Split←{⍺←' ' ⋄ (~⍵∊⍺)⊆⍵}                   ⍝ ⍺ separators (default blank) → pieces; empty pieces dropped
+    Join←{⍺←' ' ⋄ 0=≢⍵:'' ⋄ s←,⍺ ⋄ ⊃{⍺,s,⍵}/⍕¨⍵}  ⍝ ⍺ separator between the items of ⍵
+    Words←{(⍵∊⎕A,⎕C ⎕A)⊆⍵}                     ⍝ runs of (English) letters
+    Lower←{⎕C ⍵}
+    Upper←{1 ⎕C ⍵}
+    Clip←{⍺≥≢⍵:⍵ ⋄ ((⍺-1)↑⍵),'…'}               ⍝ cut ⍵ to ⍺ characters, marking the cut
+    Replace←{(from to)←⍺ ⋄ (from ⎕R to⍠('Regex' 0))⍵}  ⍝ 'old' 'new' Replace text (plain text, not regex)
+    StartsWith←{⍺≡(≢⍺)↑⍵}                      ⍝ 'ab' StartsWith 'abc' → 1
+    EndsWith←{⍺≡(-≢⍺)↑⍵}
+:EndNamespace

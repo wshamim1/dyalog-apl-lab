@@ -1,0 +1,27 @@
+:Namespace Date
+⍝ Dates as 'YYYY-MM-DD' text (or ⎕TS-style numbers: 2026 11 16)
+⍝ Part of the shared library: loaded as Lib.Date by Lib.apln.  Docs: lib/README.md
+    ⎕IO←1 ⋄ ⎕ML←1
+    Names←'Sunday' 'Monday' 'Tuesday' 'Wednesday' 'Thursday' 'Friday' 'Saturday'
+    Parse←{                                                ⍝ '2026-11-16' or '2026-11-16 09:05' → 2026 11 16 [9 5 0]
+        ~##.Str.IsText ⍵:⍵
+        v←Nums ⍵
+        Bad←{⎕SIGNAL⊂('EN' 11)('Message'('not a valid date: ',⍵))}
+        ~(≢v)∊3 5 6:Bad ⍵
+        ~IsValid v:Bad ⍵
+        (3 6⊃⍨1+3<≢v)↑v
+    }
+    Nums←{t←⍵ ⋄ t[⍸~t∊⎕D]←' ' ⋄ 2⊃⎕VFI t}                ⍝ the numbers in a date text
+    IsValid←{0::0 ⋄ v←{##.Str.IsText ⍵:Nums ⍵ ⋄ ⍵}⍵ ⋄ ~(≢v)∊3 5 6:0 ⋄ ⊃0 ⎕DT⊂7↑v}   ⍝ 1 if a real date ('2026-02-30' → 0)
+    Format←{v←Parse ⍵ ⋄ d←(⍕v[1]),'-',(P v[2]),'-',P v[3] ⋄ 3=≢v:d ⋄ d,' ',(P v[4]),':',(P v[5]),':',P v[6]}
+    P←{¯2↑'0',⍕⌊⍵}
+    Today←{Format 3↑⎕TS}                                   ⍝ '2026-11-16'
+    Day←{1 ⎕DT⊂3↑Parse ⍵}                                 ⍝ day number (days since 1899-12-31)
+    FromDay←{Format 3↑⊃¯1 ⎕DT ⍵}                           ⍝ day number → 'YYYY-MM-DD'
+    AddDays←{FromDay ⍺+Day ⍵}                              ⍝ 7 AddDays '2026-11-16' → '2026-11-23'
+    DaysBetween←{(Day ⍵)-Day ⍺}                            ⍝ '2026-11-01' DaysBetween '2026-11-16' → 15
+    Weekday←{Names⊃⍨1+7|Day ⍵}                             ⍝ Weekday '2026-11-16' → 'Monday'
+    Month←{7↑Format 3↑Parse ⍵}                             ⍝ '2026-11-16' → '2026-11' (handy for grouping with ⌸)
+    IsLeap←{y←⊃Parse ⍵ ⋄ (0=4|y)∧(0≠100|y)∨0=400|y}
+    DaysInMonth←{(y m)←2↑Parse ⍵ ⋄ m=2:28+IsLeap y 1 1 ⋄ 30+m∊1 3 5 7 8 10 12}
+:EndNamespace

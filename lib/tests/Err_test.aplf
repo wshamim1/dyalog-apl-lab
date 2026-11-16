@@ -1,0 +1,22 @@
+ Err_test;E;msg
+ E←Lib.Err
+ 11 ExpectError 'E.Fail ''bad input'''
+ 11 ExpectError '''Ctx'' E.Fail ''bad input'''
+ 5 ExpectError '5 E.Signal ''lengths differ'''
+ 11 ExpectError '''qty must be > 0'' E.Assert 1 0 1'
+ ExpectTrue 'fine' E.Assert 1 1
+ :Trap 11
+     'MySQLExec' E.Fail 'lost connection'
+ :Else
+     msg←E.Text ⍬
+ :EndTrap
+ 'DOMAIN ERROR: MySQLExec: lost connection' ExpectEq msg
+ :Trap 11
+     'qty must be > 0' E.Assert 0
+ :Else
+     msg←E.Text ⍬
+ :EndTrap
+ 'DOMAIN ERROR: qty must be > 0' ExpectEq msg
+ 0 ExpectEq 0({÷⍵}E.Try)0
+ 0.5 ExpectEq 0({÷⍵}E.Try)2
+ ⍬ ExpectEq({1 2+⍵}E.Try)1 2 3

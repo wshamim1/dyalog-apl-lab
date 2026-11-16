@@ -1,0 +1,12 @@
+:Namespace Stats
+⍝ Numbers
+⍝ Part of the shared library: loaded as Lib.Stats by Lib.apln.  Docs: lib/README.md
+    ⎕IO←1 ⋄ ⎕ML←1
+    Mean←{(+/⍵)÷≢⍵}
+    Median←{s←⍵[⍋⍵] ⋄ n←≢⍵ ⋄ Mean s[(⌈n÷2),1+⌊n÷2]}
+    Mode←{u←∪⍵ ⋄ u⊃⍨⊃⍒+/⍵∘.=⍨u}                  ⍝ most frequent value (first, on a tie)
+    SD←{(Mean(⍵-Mean ⍵)*2)*0.5}                 ⍝ population standard deviation
+    Range←{(⌈/⍵)-⌊/⍵}
+    Round←{⍺←0 ⋄ (⌊0.5+⍵×10*⍺)÷10*⍺}            ⍝ ⍺ decimal places (default 0); 2 Round = cents
+    Percent←{⍺←1 ⋄ ⍺ Round 100×⍵÷+/⍵}           ⍝ each item as a % of the total
+:EndNamespace

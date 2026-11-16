@@ -1,0 +1,26 @@
+:Namespace Log
+⍝ Timestamped log lines:  2026-11-16 09:05:03 INFO  [kafka] started
+⍝ Lines below the level are dropped. The level is Lib.Log.Level if set,
+⍝ else $LOG_LEVEL, else INFO. Set Lib.Log.File to also append to a file,
+⍝ and Lib.Log.Console←0 to stop printing (file only).
+⍝ Part of the shared library: loaded as Lib.Log by Lib.apln.  Docs: lib/README.md
+    ⎕IO←1 ⋄ ⎕ML←1
+    Levels←'DEBUG' 'INFO' 'WARN' 'ERROR'
+    Level←''
+    File←''
+    Console←1
+    Threshold←{l←1 ⎕C{0<≢⍵:⍵ ⋄ 'INFO' ##.Sys.Env 'LOG_LEVEL'}Level ⋄ i←Levels⍳⊂l ⋄ i>≢Levels:2 ⋄ i}
+    Write←{                                                ⍝ (level context) Write message
+        (lvl ctx)←⍺
+        (Levels⍳⊂lvl)<Threshold ⍬:_←''
+        line←(##.Sys.Now ⍬),' ',(5↑lvl),' ',((×≢ctx)/'[',ctx,'] '),⍕⍵
+        _←{⎕←⍵}⍣Console⊢line
+        0=≢File:_←line
+        _←(⊂,⊂line)⎕NPUT File 2
+        1:_←line                                           ⍝ a shy result: not printed twice
+    }
+    Debug←{⍺←'' ⋄ ('DEBUG'⍺)Write ⍵}
+    Info←{⍺←'' ⋄ ('INFO'⍺)Write ⍵}                         ⍝ Info 'started'   or   'kafka' Info 'started'
+    Warn←{⍺←'' ⋄ ('WARN'⍺)Write ⍵}
+    Error←{⍺←'' ⋄ ('ERROR'⍺)Write ⍵}
+:EndNamespace

@@ -1,0 +1,16 @@
+:Namespace Sys
+⍝ Environment, command line, files, time
+⍝ Part of the shared library: loaded as Lib.Sys by Lib.apln.  Docs: lib/README.md
+    ⎕IO←1 ⋄ ⎕ML←1
+    Env←{⍺←'' ⋄ v←2⎕NQ'.' 'GetEnvironment'⍵ ⋄ 0=≢v:⍺ ⋄ v}   ⍝ 'default' Env 'NAME'
+    Args←{1↓2⎕NQ'.' 'GetCommandLineArgs'}       ⍝ a script's arguments (script path left out)
+    ScriptDir←{⊃1⎕NPARTS⊃2⎕NQ'.' 'GetCommandLineArgs'}   ⍝ folder of the running script
+    Exists←{⎕NEXISTS ⍵}
+    ReadText←{⊃⎕NGET ⍵}
+    ReadLines←{⊃⎕NGET ⍵ 1}
+    WriteText←{⍺ ⎕NPUT ⍵ 1}                     ⍝ 'text' WriteText path (overwrites)
+    Now←{ISO ⎕TS}                               ⍝ '2026-11-16 09:05:03'
+    ISO←{(⍕⍵[1]),'-',(P ⍵[2]),'-',(P ⍵[3]),' ',(P ⍵[4]),':',(P ⍵[5]),':',P ⍵[6]}
+    P←{¯2↑'0',⍕⌊⍵}
+    Time←{t←⎕AI[3] ⋄ r←⍺⍺ ⍵ ⋄ ⎕←'took ',(⍕⎕AI[3]-t),' ms' ⋄ r}   ⍝ (Fn Time) arg: run and report
+:EndNamespace

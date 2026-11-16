@@ -1,0 +1,25 @@
+ Log_test;L;line;f
+ L←Lib.Log
+ L.(Level Console)←'INFO' 0                  ⍝ don't print into the test report
+ line←L.Info 'started'
+ ExpectTrue ' INFO  started'≡¯14↑line
+ ExpectTrue Lib.Date.IsValid 19↑line         ⍝ timestamp first
+ line←'kafka' L.Warn 'slow'
+ ExpectTrue ' WARN  [kafka] slow'≡¯19↑line
+ '' ExpectEq L.Debug 'hidden'                ⍝ below INFO: dropped
+ L.Level←'error'                             ⍝ case doesn't matter
+ '' ExpectEq L.Warn 'hidden'
+ ExpectTrue 0<≢L.Error 'shown'
+ L.Level←'DEBUG'
+ ExpectTrue 0<≢L.Debug 'shown'
+ L.Level←'nonsense'                          ⍝ unknown: INFO
+ '' ExpectEq L.Debug 'hidden'
+ ⍝ also to a file
+ f←(739⌶0),'/lib_log_test.log'
+ :If ⎕NEXISTS f ⋄ ⎕NDELETE f ⋄ :EndIf
+ L.(Level File)←'INFO'f
+ {}L.Info 'one'
+ {}L.Info 2 3
+ ('one' '2 3') ExpectEq ¯3∘↑¨Lib.Sys.ReadLines f
+ L.(Level File Console)←'' '' 1
+ ⎕NDELETE f

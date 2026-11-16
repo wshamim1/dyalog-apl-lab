@@ -1,0 +1,10 @@
+:Namespace Data
+⍝ Namespaces as records, and JSON
+⍝ Part of the shared library: loaded as Lib.Data by Lib.apln.  Docs: lib/README.md
+    ⎕IO←1 ⋄ ⎕ML←1
+    Record←{n←⎕NS'' ⋄ _←⍺{n⍎⍺,'←⍵'}¨⍵ ⋄ n}    ⍝ 'name' 'age' Record 'Ann' 41 → namespace
+    Fields←{n←⍵.⎕NL ¯2 ¯9 ⋄ n[⍋↑n]}            ⍝ a namespace's variable names, sorted
+    Get←{⍺←⍬ ⋄ (ns name)←⍵ ⋄ (⊂name)∊ns.⎕NL ¯2 ¯9:ns⍎name ⋄ ⍺}   ⍝ default Get ns 'name': ns.name, or ⍺ if missing
+    ToJSON←{⍺←0 ⋄ 1(⎕JSON⍠('Compact'(~⍺)))⍵}   ⍝ 1 ToJSON x → pretty-printed
+    FromJSON←{0 ⎕JSON ⍵}
+:EndNamespace

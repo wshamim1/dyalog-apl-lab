@@ -1,0 +1,6 @@
+ Lib_test
+ ⍝ Lib.apln loads every other .apln in lib/ as Lib.<Name>
+ ('Data' 'Date' 'Err' 'Fmt' 'Log' 'Stats' 'Str' 'Sys') ExpectEq Lib.Parts
+ ExpectTrue 9.1∧.=Lib.⎕NC Lib.Parts                 ⍝ each one a namespace
+ 'hi' ExpectEq Lib.Str.Trim ' hi '
+ 'Monday' ExpectEq Lib.Date.Weekday '2026-11-16'    ⍝ Date uses ##.Str

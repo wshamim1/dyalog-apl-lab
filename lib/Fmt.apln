@@ -1,0 +1,26 @@
+:Namespace Fmt
+⍝ Numbers and text for reports. Each takes a number (or a vector: one string each).
+⍝ Negative numbers get a plain '-', not APL's '¯'.
+⍝ Part of the shared library: loaded as Lib.Fmt by Lib.apln.  Docs: lib/README.md
+    ⎕IO←1 ⋄ ⎕ML←1
+    Num←{(d c)←⍺ ⋄ t←,((c/'C'),(1+d>0)⊃'I40'('F40.',⍕d))⎕FMT ⍵ ⋄ Dash t↓⍨+/∧\' '=t}
+    Dash←{('-'@{⍵='¯'})⍵}
+    Fixed←{⍺←2 ⋄ 1≠≢,⍵:⍺∘∇¨⍵ ⋄ (⍺ 0)Num⊃⍵}                ⍝ 2 Fixed 3.5 → '3.50'
+    Commas←{⍺←0 ⋄ 1≠≢,⍵:⍺∘∇¨⍵ ⋄ (⍺ 1)Num⊃⍵}               ⍝ Commas 1234567 → '1,234,567'
+    Money←{⍺←'$' ⋄ 1≠≢,⍵:⍺∘∇¨⍵ ⋄ ((0>⊃⍵)/'-'),⍺,2 Commas|⊃⍵}   ⍝ Money ¯1234.5 → '-$1,234.50'
+    Pct←{⍺←1 ⋄ 1≠≢,⍵:⍺∘∇¨⍵ ⋄ (⍺ Fixed 100×⍵),'%'}         ⍝ Pct 0.256 → '25.6%'
+    Bytes←{1≠≢,⍵:∇¨⍵ ⋄ i←0⌈4⌊⌊1024⍟1⌈⊃⍵ ⋄ i=0:(⍕⍵),' B' ⋄ (1 Fixed ⍵÷1024*i),' ',i⊃'KB' 'MB' 'GB' 'TB'}
+    Duration←{                                             ⍝ milliseconds → '850 ms', '4.2 s', '3m 05s', '1h 02m'
+        1≠≢,⍵:∇¨⍵ ⋄ ms←⊃⍵
+        ms<1000:(⍕⌊ms),' ms'
+        ms<60000:(1 Fixed ms÷1000),' s'
+        (h m s)←0 60 60⊤⌊ms÷1000
+        h=0:(⍕m),'m ',(P s),'s'
+        (⍕h),'h ',(P m),'m'
+    }
+    P←{¯2↑'0',⍕⍵}
+    PadL←{(-⍺⌈≢t)↑t←⍕⍵}                                    ⍝ 6 PadL 42 → '    42' (right-aligned)
+    PadR←{(⍺⌈≢t)↑t←⍕⍵}                                     ⍝ 6 PadR 'ab' → 'ab    '
+    Center←{t←⍕⍵ ⋄ w←⍺⌈≢t ⋄ (-⌊(w-≢t)÷2)⌽w↑t}           ⍝ 7 Center 'abc' → '  abc  '
+    Plural←{n←⍺ ⋄ w←{2=|≡⍵:(1+n≠1)⊃⍵ ⋄ ⍵,(n≠1)/'s'}⍵ ⋄ (⍕n),' ',w}   ⍝ 3 Plural 'order', 2 Plural 'child' 'children'
+:EndNamespace

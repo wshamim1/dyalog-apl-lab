@@ -1,0 +1,28 @@
+ Fmt_test;F
+ F←Lib.Fmt
+ '3.50' ExpectEq 2 F.Fixed 3.5
+ '-0.25' ExpectEq 2 F.Fixed ¯0.25
+ (,'3') ExpectEq 0 F.Fixed 3.4
+ ('1.0' '2.5') ExpectEq 1 F.Fixed 1 2.5
+ '1,234,567' ExpectEq F.Commas 1234567
+ '-1,234.57' ExpectEq 2 F.Commas ¯1234.567
+ '999' ExpectEq F.Commas 999
+ '$1,234.50' ExpectEq F.Money 1234.5
+ '-$1,234.50' ExpectEq F.Money ¯1234.5
+ '€0.99' ExpectEq '€' F.Money 0.99
+ '25.6%' ExpectEq F.Pct 0.256
+ '50%' ExpectEq 0 F.Pct 0.5
+ '512 B' ExpectEq F.Bytes 512
+ '1.5 KB' ExpectEq F.Bytes 1536
+ '2.0 MB' ExpectEq F.Bytes 2×1024*2
+ '850 ms' ExpectEq F.Duration 850
+ '4.2 s' ExpectEq F.Duration 4200
+ '3m 05s' ExpectEq F.Duration 185000
+ '1h 02m' ExpectEq F.Duration 3720000
+ '    42' ExpectEq 6 F.PadL 42
+ 'ab    ' ExpectEq 6 F.PadR 'ab'
+ 'abcdef' ExpectEq 3 F.PadL 'abcdef'          ⍝ never cuts
+ '  abc  ' ExpectEq 7 F.Center 'abc'
+ '3 orders' ExpectEq 3 F.Plural 'order'
+ '1 order' ExpectEq 1 F.Plural 'order'
+ '2 children' ExpectEq 2 F.Plural 'child' 'children'

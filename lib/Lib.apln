@@ -1,66 +1,21 @@
 :Namespace Lib
-⍝ Common helpers shared by the code in this repo.  Docs: lib/README.md
+⍝ The shared library.  Docs: lib/README.md
 ⍝
-⍝ Load it with one line (the `dyalog` command mounts lib/ at /apl-lib):
+⍝ Each part is its own file in this folder: Str.apln, Stats.apln, Data.apln,
+⍝ Sys.apln, Fmt.apln, Err.apln, Date.apln, Log.apln. Fixing this file loads
+⍝ every other .apln here as Lib.<Name>, so one line gets you all of them
+⍝ (the `dyalog` command mounts lib/ at /apl-lib):
 ⍝     ⎕FIX'file:///apl-lib/Lib.apln'
-⍝ then call  Lib.Str.Trim '  hi '   or   Lib.Stats.Mean 1 2 3
+⍝     Lib.Str.Trim '  hi '   ⋄   Lib.Stats.Mean 1 2 3
 ⍝
+⍝ To add a part, add a :Namespace file to this folder: it is picked up
+⍝ automatically. Fix this file again to reload everything after an edit.
 ⍝ Under `dyalog test`, Lib is already loaded for the code being tested.
 
     ⎕IO←1 ⋄ ⎕ML←1
-
-    :Namespace Str
-    ⍝ Text
-        ⎕IO←1 ⋄ ⎕ML←1
-        IsText←{(0=10|⎕DR ⍵)∧1≥|≡⍵}                ⍝ a character scalar or vector?
-        Trim←{⍵/⍨(∨\m)∧⌽∨\⌽m←' '≠⍵}               ⍝ drop leading/trailing blanks
-        Split←{⍺←' ' ⋄ (~⍵∊⍺)⊆⍵}                   ⍝ ⍺ separators (default blank) → pieces; empty pieces dropped
-        Join←{⍺←' ' ⋄ 0=≢⍵:'' ⋄ s←,⍺ ⋄ ⊃{⍺,s,⍵}/⍕¨⍵}  ⍝ ⍺ separator between the items of ⍵
-        Words←{(⍵∊⎕A,⎕C ⎕A)⊆⍵}                     ⍝ runs of (English) letters
-        Lower←{⎕C ⍵}
-        Upper←{1 ⎕C ⍵}
-        Clip←{⍺≥≢⍵:⍵ ⋄ ((⍺-1)↑⍵),'…'}               ⍝ cut ⍵ to ⍺ characters, marking the cut
-        Replace←{(from to)←⍺ ⋄ (from ⎕R to⍠('Regex' 0))⍵}  ⍝ 'old' 'new' Replace text (plain text, not regex)
-        StartsWith←{⍺≡(≢⍺)↑⍵}                      ⍝ 'ab' StartsWith 'abc' → 1
-        EndsWith←{⍺≡(-≢⍺)↑⍵}
-    :EndNamespace
-
-    :Namespace Stats
-    ⍝ Numbers
-        ⎕IO←1 ⋄ ⎕ML←1
-        Mean←{(+/⍵)÷≢⍵}
-        Median←{s←⍵[⍋⍵] ⋄ n←≢⍵ ⋄ Mean s[(⌈n÷2),1+⌊n÷2]}
-        Mode←{u←∪⍵ ⋄ u⊃⍨⊃⍒+/⍵∘.=⍨u}                  ⍝ most frequent value (first, on a tie)
-        SD←{(Mean(⍵-Mean ⍵)*2)*0.5}                 ⍝ population standard deviation
-        Range←{(⌈/⍵)-⌊/⍵}
-        Round←{⍺←0 ⋄ (⌊0.5+⍵×10*⍺)÷10*⍺}            ⍝ ⍺ decimal places (default 0); 2 Round = cents
-        Percent←{⍺←1 ⋄ ⍺ Round 100×⍵÷+/⍵}           ⍝ each item as a % of the total
-    :EndNamespace
-
-    :Namespace Data
-    ⍝ Namespaces as records, and JSON
-        ⎕IO←1 ⋄ ⎕ML←1
-        Record←{n←⎕NS'' ⋄ _←⍺{n⍎⍺,'←⍵'}¨⍵ ⋄ n}    ⍝ 'name' 'age' Record 'Ann' 41 → namespace
-        Fields←{n←⍵.⎕NL ¯2 ¯9 ⋄ n[⍋↑n]}            ⍝ a namespace's variable names, sorted
-        Get←{⍺←⍬ ⋄ (ns name)←⍵ ⋄ (⊂name)∊ns.⎕NL ¯2 ¯9:ns⍎name ⋄ ⍺}   ⍝ default Get ns 'name': ns.name, or ⍺ if missing
-        ToJSON←{⍺←0 ⋄ 1(⎕JSON⍠('Compact'(~⍺)))⍵}   ⍝ 1 ToJSON x → pretty-printed
-        FromJSON←{0 ⎕JSON ⍵}
-    :EndNamespace
-
-    :Namespace Sys
-    ⍝ Environment, command line, files, time
-        ⎕IO←1 ⋄ ⎕ML←1
-        Env←{⍺←'' ⋄ v←2⎕NQ'.' 'GetEnvironment'⍵ ⋄ 0=≢v:⍺ ⋄ v}   ⍝ 'default' Env 'NAME'
-        Args←{1↓2⎕NQ'.' 'GetCommandLineArgs'}       ⍝ a script's arguments (script path left out)
-        ScriptDir←{⊃1⎕NPARTS⊃2⎕NQ'.' 'GetCommandLineArgs'}   ⍝ folder of the running script
-        Exists←{⎕NEXISTS ⍵}
-        ReadText←{⊃⎕NGET ⍵}
-        ReadLines←{⊃⎕NGET ⍵ 1}
-        WriteText←{⍺ ⎕NPUT ⍵ 1}                     ⍝ 'text' WriteText path (overwrites)
-        Now←{ISO ⎕TS}                               ⍝ '2026-11-16 09:05:03'
-        ISO←{(⍕⍵[1]),'-',(P ⍵[2]),'-',(P ⍵[3]),' ',(P ⍵[4]),':',(P ⍵[5]),':',P ⍵[6]}
-        P←{¯2↑'0',⍕⌊⍵}
-        Time←{t←⎕AI[3] ⋄ r←⍺⍺ ⍵ ⋄ ⎕←'took ',(⍕⎕AI[3]-t),' ms' ⋄ r}   ⍝ (Fn Time) arg: run and report
-    :EndNamespace
-
+    Dir←{0::'/apl-lib/' ⋄ ⊃1⎕NPARTS 4⊃5179⌶⍵}⎕THIS      ⍝ the folder this file was fixed from
+    Files←(⊃0 1(⎕NINFO⍠1)Dir,'*.apln')~⊂Dir,'Lib.apln'
+    Files←Files[⍋↑Files]
+    Parts←{2⊃⎕NPARTS ⍵}¨Files                            ⍝ 'Data' 'Date' 'Err' …
+    Loaded←{⎕FIX'file://',⍵}¨Files                       ⍝ (statements here must be assignments)
 :EndNamespace
