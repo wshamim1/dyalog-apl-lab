@@ -110,21 +110,7 @@ dyalog help
 
 ## Integrations
 
-```mermaid
-flowchart LR
-    you(["You"]) --> st["Streamlit app<br/>English → APL"]
-    you --> py["Your Python code"]
-    you --> aplfns["APL session<br/>MySQL*.aplf"]
-    st --> openai["☁️ OpenAI"]
-    st --> ride["dyalog_ride<br/>RIDE client"]
-    py --> ride
-    py --> pymysql["mysql bridge<br/>(PyMySQL)"]
-    pymysql --> ride
-    ride -- "TCP :4502" --> dyalog[("Dyalog APL<br/>container")]
-    aplfns --> dyalog
-    pymysql --> mysql[("MySQL")]
-    dyalog -- "SQAPL / ODBC" --> mysql
-```
+How each of these connects to Dyalog is in the [architecture diagram](architecture/README.md).
 
 | Integration | What it does | Start here |
 | --- | --- | --- |
@@ -134,6 +120,7 @@ flowchart LR
 | **kafka** | Produce and consume Kafka messages from APL; a restart-safe stream processor keeping running totals per region | [README](integrations/kafka/README.md) |
 | **mysql** (Python) | Load query results into APL as column vectors, analyse them, and write results back as tables | [README](integrations/mysql/README.md) |
 | **mysql/apl** (pure APL) | `MySQLConnect`, `MySQLQuery`, `MySQLExec`, `MySQLSave` as `.aplf` functions, using Dyalog's SQAPL over ODBC | [README](integrations/mysql/apl/README.md) |
+| **scheduling** | Run APL scripts on a schedule: a cron wrapper (lock, logs, exit codes) and a local Airflow with Dyalog inside it | [README](integrations/scheduling/README.md) |
 
 ```sh
 # one-time Python setup for the integrations
@@ -162,6 +149,7 @@ integrations/
   kafka/                Kafka from APL: kafka.sh, Kafka.apln, stream-processing demo
   mysql/                MySQL ↔ APL from Python
     apl/                MySQL ↔ APL from APL (SQAPL), plus Dockerfile for the ODBC driver
+  scheduling/           APL jobs on a schedule: run-job.sh, cron/, airflow/ (compose + DAGs)
 install/
   dyalog/               ways to run Dyalog: the `dyalog` command, Mac app, Docker, Podman
   jupyter/              JupyterLab + Dyalog kernel image (jupyter.sh start)
