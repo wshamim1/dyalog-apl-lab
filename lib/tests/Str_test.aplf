@@ -1,0 +1,21 @@
+ Str_test
+ ExpectTrue Lib.Str.IsText 'abc'
+ ExpectTrue Lib.Str.IsText 'a'
+ ExpectFalse Lib.Str.IsText 1 2 3
+ ExpectFalse Lib.Str.IsText 'ab' 'cd'
+ 'hi there' ExpectEq Lib.Str.Trim '  hi there  '
+ '' ExpectEq Lib.Str.Trim '   '
+ (,¨'a' 'bb' 'c') ExpectEq Lib.Str.Split ' a  bb c '
+ (,¨'xyz') ExpectEq ',' Lib.Str.Split 'x,y,,z'
+ 'a, b, c' ExpectEq ', ' Lib.Str.Join 'a' 'b' 'c'
+ '1-2-3' ExpectEq '-' Lib.Str.Join 1 2 3
+ '' ExpectEq Lib.Str.Join ⍬
+ ('Hello' 'world') ExpectEq Lib.Str.Words 'Hello, world!'
+ 'abc' ExpectEq Lib.Str.Lower 'ABC'
+ 'ABC' ExpectEq Lib.Str.Upper 'abc'
+ 'abcd…' ExpectEq 5 Lib.Str.Clip 'abcdefgh'
+ 'abc' ExpectEq 5 Lib.Str.Clip 'abc'
+ 'a+b=c' ExpectEq ('.' '+') Lib.Str.Replace 'a.b=c'
+ ExpectTrue 'ab' Lib.Str.StartsWith 'abc'
+ ExpectFalse 'abcd' Lib.Str.StartsWith 'abc'
+ ExpectTrue '.csv' Lib.Str.EndsWith 'sales.csv'

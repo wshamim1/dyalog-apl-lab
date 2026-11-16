@@ -46,6 +46,9 @@ A test is a function with no arguments that makes some checks:
 
 A dfn works too: `Vowels_test←{3 ExpectEq Vowels 'Hello World'}`.
 
+The [shared library](../lib/README.md) `Lib` is loaded before your code, so
+both can call `Lib.Str.Trim` and friends without loading anything.
+
 See [examples/](examples) for a complete example.
 
 ## Assertions

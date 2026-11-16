@@ -31,6 +31,7 @@ Python, C#, C and C++ connect to Dyalog.
 | 📜 **[Sample scripts](sample-scripts/README.md)** | Small runnable programs: primes, strings, statistics, Game of Life, a CSV report… |
 | 🗂️ **[File types](sample-scripts/file-types/README.md)** | One example of each Dyalog file type: `.apls .aplf .aplo .apln .aplc .apli .apla .dyapp .dws` |
 | ⌨️ **[`dyalog` command](install/dyalog/README.md#the-dyalog-command)** | Run Dyalog and APL files from any folder, on any Mac (including Intel), using a container |
+| 🧰 **[Shared library](lib/README.md)** | `Lib`: common helpers for text, statistics, records/JSON and the system, loaded with one line from any folder |
 | 🧪 **[Testing](testing/README.md)** | A small APL test framework: write `*_test.aplf` files, run `dyalog test` |
 | 🗂️ **[Component file viewer and diff](dcf-tools/README.md)** | Look inside `.dcf` files and see exactly what changed between two versions (component, field, cell), from the command line or a web page |
 | 🔌 **[Integrations](integrations/README.md)** | Drive Dyalog from Python, ask questions in plain English (OpenAI + Streamlit), read and write MySQL from Python or from APL itself |

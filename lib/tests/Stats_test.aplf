@@ -1,0 +1,13 @@
+ Stats_test;x
+ x←23 45 12 67 34 45 89 21 45 56 34 78
+ 2 ExpectEq Lib.Stats.Mean 1 2 3
+ 2.5 ExpectEq Lib.Stats.Median 4 1 3 2
+ 3 ExpectEq Lib.Stats.Median 5 1 3
+ 45 ExpectEq Lib.Stats.Mode x
+ 1 ExpectEq Lib.Stats.Mode 1 2 3          ⍝ a tie: the first one
+ 2 ExpectEq Lib.Stats.SD 2 4 4 4 5 5 7 9
+ 77 ExpectEq Lib.Stats.Range x
+ 3 ExpectEq Lib.Stats.Round 2.5
+ 3.14 ExpectEq 2 Lib.Stats.Round ○1
+ 1.01 ExpectNear 2 Lib.Stats.Round 1.005
+ 25 75 ExpectEq Lib.Stats.Percent 1 3

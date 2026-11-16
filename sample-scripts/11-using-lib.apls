@@ -1,0 +1,21 @@
+⍝ 11 · Using the shared library (lib/Lib.apln) instead of rewriting helpers
+⍝ Run:  dyalog sample-scripts/11-using-lib.apls
+⍝ The `dyalog` command mounts lib/ at /apl-lib, so this line works from any folder:
+⎕FIX'file:///apl-lib/Lib.apln'
+S←Lib.Str ⋄ N←Lib.Stats                  ⍝ short names for the parts you use
+
+⍝ Words in poem.txt, using Str and Sys
+text←Lib.Sys.ReadText (Lib.Sys.ScriptDir⍬),'poem.txt'
+words←S.Lower¨S.Words text
+⎕←'words: ',(⍕≢words),'   longest: ',⊃words[⊃⍒≢¨words]
+
+⍝ Statistics on the word lengths
+len←≢¨words
+⎕←'mean length:   ',⍕2 N.Round N.Mean len
+⎕←'median length: ',⍕N.Median len
+⎕←'most common:   ',⍕N.Mode len
+
+⍝ A record, as JSON
+r←'file' 'words' 'when' Lib.Data.Record 'poem.txt'(≢words)(Lib.Sys.Now⍬)
+⎕←Lib.Data.ToJSON r
+⎕←', ' S.Join Lib.Data.Fields r

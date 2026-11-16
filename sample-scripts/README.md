@@ -20,6 +20,7 @@ dyalog sample-scripts/04-primes.apls
 | [08-life.apls](08-life.apls) | Conway's Game of Life in one line (a glider moving) | `⊖ ⌽ ∨.∧` |
 | [09-word-count.apls](09-word-count.apls) | word frequencies in [poem.txt](poem.txt), or any file you pass | `⎕NGET ⊆ ⌸` |
 | [10-csv-report.apls](10-csv-report.apls) | revenue per region from [sales.csv](sales.csv) | `⎕CSV ⌸ ⍒` |
+| [11-using-lib.apls](11-using-lib.apls) | using the [shared library](../lib/README.md) instead of rewriting helpers | `⎕FIX` |
 
 All outputs were checked against the same calculations in Python.
 

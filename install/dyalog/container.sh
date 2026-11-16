@@ -8,7 +8,8 @@
 #   ./docker.sh run       # interactive APL session in this terminal
 #   ./docker.sh ride      # interpreter serving RIDE on port 4502
 #
-# The repo root (or MOUNT_DIR) is mounted at /app inside the container.
+# The repo root (or MOUNT_DIR) is mounted at /app inside the container,
+# and the shared APL library (<repo>/lib) at /apl-lib, read-only.
 #
 # Env:
 #   IMAGE       image to use   (default: docker.io/dyalog/dyalog)
@@ -24,15 +25,25 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 MOUNT_DIR="$(cd "${MOUNT_DIR:-$REPO_ROOT}" && pwd)"
 SELF="${SELF:-$0}"
+LIB_DIR="$REPO_ROOT/lib"
 
 info() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33mwarning:\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[1;31merror:\033[0m %s\n' "$*" >&2; exit 1; }
-usage() { sed -n '5,16p' "$SCRIPT_DIR/container.sh" | sed 's/^# \{0,1\}//' | sed "s|./docker.sh|$SELF|"; }
+usage() { sed -n '5,17p' "$SCRIPT_DIR/container.sh" | sed 's/^# \{0,1\}//' | sed "s|./docker.sh|$SELF|"; }
 
 case "$ENGINE" in docker|podman) ;; *) die "ENGINE must be docker or podman" ;; esac
 
 have() { command -v "$1" >/dev/null 2>&1; }
+
+# Mount the shared library (lib/Lib.apln) at /apl-lib, read-only, and say
+# where it is in APL_LIB. Code loads it with ⎕FIX'file:///apl-lib/Lib.apln'.
+LIB_ARGS=()
+if [ -f "$LIB_DIR/Lib.apln" ]; then
+  lib_vol="$LIB_DIR:/apl-lib:ro"
+  if [ "$ENGINE" = podman ] && [ "$(uname -s)" = Linux ]; then lib_vol="$lib_vol,Z"; fi
+  LIB_ARGS=(-v "$lib_vol" -e APL_LIB=/apl-lib/Lib.apln)
+fi
 
 # --- engine setup ------------------------------------------------------------
 install_engine() {
@@ -106,7 +117,7 @@ run_container() {
   if [ "$ENGINE" = podman ] && [ "$(uname -s)" = Linux ]; then vol="$vol:Z"; fi
   # shellcheck disable=SC2046
   exec "$ENGINE" run -it --rm $(platform_args) \
-    -v "$vol" -w /app \
+    -v "$vol" -w /app ${LIB_ARGS[@]+"${LIB_ARGS[@]}"} \
     ${extra[@]+"${extra[@]}"} \
     "$IMAGE"
 }
@@ -153,7 +164,7 @@ case "${1:-}" in
     # Normalise both to \n (awk also adds a missing final newline), and keep
     # dyalogscript's exit code.
     # shellcheck disable=SC2046
-    "$ENGINE" run -i ${tty[@]+"${tty[@]}"} --rm $(platform_args) -v "$vol" -w /app \
+    "$ENGINE" run -i ${tty[@]+"${tty[@]}"} --rm $(platform_args) -v "$vol" -w /app ${LIB_ARGS[@]+"${LIB_ARGS[@]}"} \
       ${extra[@]+"${extra[@]}"} --entrypoint dyalogscript "$IMAGE" "$@" \
       | awk '{ sub(/\r$/, ""); gsub(/\r/, "\n"); print }'
     exit "${PIPESTATUS[0]}"

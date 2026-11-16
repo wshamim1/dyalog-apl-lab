@@ -16,7 +16,8 @@
 ⍝     Tester.Run '/app/path'                     from a session; returns 0 or 1
 ⍝
 ⍝ Each test file runs in a fresh namespace with the folder's code loaded
-⍝ (.apli, .apln, .aplc, .aplf, .aplo, and .apla files as variables).
+⍝ (.apli, .apln, .aplc, .aplf, .aplo, and .apla files as variables), and
+⍝ the shared library Lib (lib/Lib.apln, found through $APL_LIB) loaded first.
 
     ⎕IO←1 ⋄ ⎕ML←1
     Skip←'node_modules' '.venv' '__pycache__'        ⍝ folders never searched
@@ -50,7 +51,8 @@
     ⍝ Run one test file in a fresh namespace. r: status name messages checks
       ns←#.⎕NS''
       {}ns.⎕FX¨⎕NR¨Asserts               ⍝ give the sandbox the Expect… functions
-      warn←ns LoadCode CodeFolder file
+      warn←LoadLib ns                     ⍝ the shared library, so code can call Lib.…
+      warn,←ns LoadCode CodeFolder file
       ns.(⍙fails ⍙checks)←⍬ 0
       :Trap 0
           name←⊃2 ns.⎕FIX'file://',file
@@ -65,6 +67,18 @@
           r←((1+0=≢ns.⍙fails)⊃'fail' 'pass')name(warn,ns.⍙fails)ns.⍙checks
       :Else
           r←'error'name(warn,ns.⍙fails,⊂ErrorText ⍬)ns.⍙checks
+      :EndTrap
+    ∇
+
+    ∇ warn←LoadLib ns;lib
+    ⍝ Fix the shared library into ns, if $APL_LIB names one (`dyalog` sets it).
+      warn←⍬
+      lib←2⎕NQ'.' 'GetEnvironment' 'APL_LIB'
+      :If 0=≢lib ⋄ :Return ⋄ :EndIf
+      :Trap 0
+          {}ns.⎕FIX'file://',lib
+      :Else
+          warn←⊂'warning: could not load the library ',lib,': ',ErrorText ⍬
       :EndTrap
     ∇
 

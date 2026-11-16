@@ -1,0 +1,14 @@
+ Data_test;r;j
+ r←'name' 'age' Lib.Data.Record 'Ann' 41
+ 'Ann' ExpectEq r.name
+ 41 ExpectEq r.age
+ ('age' 'name') ExpectEq Lib.Data.Fields r
+ 41 ExpectEq Lib.Data.Get r 'age'
+ ⍬ ExpectEq Lib.Data.Get r 'city'
+ 'none' ExpectEq 'none' Lib.Data.Get r 'city'
+ j←Lib.Data.ToJSON r
+ '{"age":41,"name":"Ann"}' ExpectEq j
+ '"abc"' ExpectEq Lib.Data.ToJSON 'abc'      ⍝ a string is exported, not parsed
+ ExpectTrue (≢j)<≢1 Lib.Data.ToJSON r     ⍝ pretty: indented, on several lines
+ 41 ExpectEq (Lib.Data.FromJSON j).age
+ 1 2 3 ExpectEq Lib.Data.FromJSON '[1,2,3]'
