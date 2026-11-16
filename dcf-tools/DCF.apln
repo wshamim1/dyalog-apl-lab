@@ -1,0 +1,386 @@
+:Namespace DCF
+⍝ Look inside component files (.dcf) and compare them. Never writes to them.
+⍝
+⍝   DCF.Kind value                  'namespace', 'char vector', 'numeric matrix', …
+⍝   a DCF.Same b                    deep equality: also compares namespaces by content
+⍝   d←DCF.Dump file                 file info + every component (kind, size, time, value)
+⍝   r←DCF.DiffFiles old new         component by component: added, removed, changed
+⍝   r←DCF.DiffFolders old new       every .dcf in two folders
+⍝   ⎕←DCF.Report r                  r as readable text lines
+⍝   DCF.JSON x                      x as JSON (for the viewer)
+⍝
+⍝ Files are share-tied (⎕FSTIE), so other users aren't locked out, and
+⍝ nothing here calls ⎕FAPPEND, ⎕FREPLACE or ⎕FHOLD.
+⍝ Positions in diffs ([3], [2;5]) count from 1, like ⎕IO←1.
+
+    ⎕IO←1 ⋄ ⎕ML←1
+    MaxRows←200          ⍝ previews: items of a vector, rows of a matrix
+    MaxCols←50           ⍝ previews: columns (and other axes)
+    MaxText←2000         ⍝ previews: characters of a text
+    MaxChanges←100       ⍝ diffs: changes listed per component (the count is always exact)
+    MaxComponents←5000   ⍝ Dump: components included
+    Epoch←25568          ⍝ 1 ⎕DT ⊂1970 1 1, Dyalog's day number for 1970-01-01
+    Truncated←0          ⍝ set by Trunc when a preview was cut
+
+⍝ ── Reading ──────────────────────────────────────────────────────────────
+
+    ∇ t←Tie file
+    ⍝ Share-tie: read without locking anyone else out
+      t←file ⎕FSTIE 0
+    ∇
+
+    ∇ r←Comps t;first;next
+    ⍝ The component numbers of a tied file: first … next-1
+      (first next)←2↑⎕FSIZE t
+      r←(first-1)+⍳next-first
+    ∇
+
+    ∇ m←t Meta n;size;user;time
+    ⍝ Size, user and time of the last write (⎕FRDCI time: 60ths of a second since 1970, UTC)
+      (size user time)←⎕FRDCI t n
+      m←⎕NS''
+      m.bytes←size
+      m.user←user
+      m.written←ISO⊃¯1 ⎕DT Epoch+time÷60×86400
+    ∇
+
+    ISO←{(⍕⍵[1]),'-',(P ⍵[2]),'-',(P ⍵[3]),' ',(P ⍵[4]),':',(P ⍵[5]),':',P ⍵[6]}
+    P←{¯2↑'0',⍕⌊⍵}
+
+    ∇ c←t Component n;v
+    ⍝ One component: metadata, kind, a one-line text and a JSON-safe preview
+      v←⎕FREAD t n
+      c←t Meta n
+      c.component←n
+      c.kind←Kind v
+      c.shape←⍴v
+      c.text←80 Short v
+      Truncated←0
+      c.value←Safe v
+      c.truncated←Truncated
+      :Trap 0
+          {}JSON c.value
+      :Else
+          c.value←80 Short v ⋄ c.json_ok←0     ⍝ shouldn't happen: Safe makes values exportable
+      :EndTrap
+    ∇
+
+    ∇ r←Dump file;t;cs
+    ⍝ Everything about a file, as a namespace (JSON r gives the viewer's data)
+      t←Tie file
+      r←⎕NS''
+      r.file←file
+      r.(first next bytes)←3↑⎕FSIZE t
+      cs←Comps t
+      r.count←≢cs
+      r.components←t∘Component¨(MaxComponents⌊≢cs)↑cs
+      r.more←0⌈(≢cs)-MaxComponents
+      ⎕FUNTIE t
+    ∇
+
+⍝ ── Describing values ────────────────────────────────────────────────────
+
+    ∇ k←Kind v;t
+    ⍝ What a value is, in words
+      :If 9=⌊⎕NC'v' ⋄ k←'namespace' ⋄ :Return ⋄ :EndIf
+      t←⎕DR v
+      :If 1<|≡v ⋄ k←'nested'
+      :ElseIf 0=10|t ⋄ k←'char'
+      :ElseIf 11=t ⋄ k←'boolean'
+      :ElseIf 326=t ⋄ k←(1+∧/,{9=⌊⎕NC⊂'⍵'}¨v)⊃'mixed' 'namespaces'
+      :Else ⋄ k←'numeric'
+      :EndIf
+      k←k,' ',Rank v
+    ∇
+
+    Rank←{⊃('scalar' 'vector' 'matrix',⊂'rank ',⍕≢⍴⍵)[1+3⌊≢⍴⍵]}
+    Clip←{⍺≥≢⍵:⍵ ⋄ ((⍺-1)↑⍵),'…'}            ⍝ text cut to ⍺ characters
+    Names←{n←⍵.⎕NL ¯2 ¯9 ⋄ n[⍋↑n]}         ⍝ a namespace's variables, sorted
+    Dcfs←{{2⊃⎕NPARTS ⍵}¨⊃0 1(⎕NINFO⍠1)⍵,'/*.dcf'}   ⍝ names of the .dcf files in a folder
+
+    Short←{                                ⍝ one line of text, at most ⍺ characters
+        ⍺←60
+        s←Line ⍵
+        ⍺≥≢s:s
+        ((⍺-1)↑s),'…'
+    }
+
+    Line←{
+        9=⌊⎕NC⊂'⍵':'ns(',(¯1↓∊(Names ⍵),¨' '),')'
+        (0=≢⍴⍵)∧0<≡⍵:Line⊃⍵                                   ⍝ enclosed scalar
+        1<≢⍴⍵:(⍕⍴⍵),'⍴',Line(MaxRows⌊≢,⍵)↑,⍵
+        (0=10|⎕DR ⍵)∧1≥|≡⍵:'''',((MaxText⌊≢,⍵)↑,⍵),''''
+        (1≥|≡⍵)∧326≠⎕DR ⍵:⍕(MaxRows⌊≢,⍵)↑,⍵
+        '(',(¯1↓∊(Line¨(MaxRows⌊≢⍵)↑⍵),¨' '),')'
+    }
+
+⍝ ── JSON-safe previews ───────────────────────────────────────────────────
+
+    ∇ r←Trunc v;s;lim
+    ⍝ v cut to preview size (sets Truncated when something was cut)
+      :If 0=≢⍴v ⋄ r←v ⋄ :Return ⋄ :EndIf
+      s←⍴v
+      lim←(≢s)⍴MaxCols
+      lim[1]←MaxRows
+      :If (0=10|⎕DR v)∧1≥|≡v ⋄ lim[≢s]←MaxText ⋄ :EndIf      ⍝ text: whole lines
+      :If ∨/s>lim
+          Truncated←1 ⋄ r←(s⌊lim)↑v
+      :Else
+          r←v
+      :EndIf
+    ∇
+
+    Safe←{                                 ⍝ a copy ⎕JSON can export; ⍺: depth left
+        ⍺←6
+        ⍺≤0:'…'
+        ⍵≡#:'#'
+        9=⌊⎕NC⊂'⍵':⍺ SafeNs ⍵
+        (1≥|≡⍵)∧326≠⎕DR ⍵:{1289=⎕DR ⍵:⍕¨⍵ ⋄ ⍵}Trunc ⍵      ⍝ complex numbers → text
+        (⍺-1)Safe¨Trunc ⍵
+    }
+
+    ∇ r←d SafeNs ns;n;v;fns
+    ⍝ A namespace's variables (made safe); functions listed by name only
+      r←⎕NS''
+      :For n :In Names ns
+          v←ns⍎n
+          :If 9=⌊⎕NC'v'
+          :AndIf (v≡#)∨v≡ns.##
+              v←'(reference to ',(⍕v),')'
+          :Else
+              v←(d-1)Safe v
+          :EndIf
+          ⍎'r.',n,'←v'
+      :EndFor
+      :If 0<≢fns←ns.⎕NL ¯3 ¯4
+          r.apl_functions←fns
+      :EndIf
+    ∇
+
+    JSON←{1(⎕JSON⍠('HighRank' 'Split'))⍵}
+
+⍝ ── Comparing ────────────────────────────────────────────────────────────
+
+    Same←{                                 ⍝ deep match: namespaces compare by content
+        ⍺≡⍵:1
+        a←9=⌊⎕NC⊂'⍺' ⋄ b←9=⌊⎕NC⊂'⍵'
+        a∧b:⍺ SameNs ⍵
+        a∨b:0
+        (⍴⍺)≢⍴⍵:0
+        (326≠⎕DR ⍺)∨326≠⎕DR ⍵:0              ⍝ no namespaces inside, and ≢ already
+        ∧/,⍺ Same¨⍵
+    }
+    SameNs←{
+        (Names ⍺)≢n←Names ⍵:0
+        ∧/(⍺∘⍎¨n)Same¨⍵∘⍎¨n
+    }
+
+    ∇ d←{lvl}Detail(a b);n;na;nb;x;m;ra;rb;diff;i;ia;ib
+    ⍝ How two different values differ: by field, by item, by cell, or as a whole
+      :If 0=⎕NC'lvl' ⋄ lvl←0 ⋄ :EndIf
+      d←⎕NS''
+      d.old_kind←Kind a ⋄ d.new_kind←Kind b
+      d.old_text←Short a ⋄ d.new_text←Short b
+      :If (9=⌊⎕NC'a')∧9=⌊⎕NC'b'
+          d.how←'fields'
+          na←Names a ⋄ nb←Names b
+          d.changes←⍬
+          :For n :In na,nb~na
+              x←⎕NS'' ⋄ x.field←n
+              :If ~(⊂n)∊nb
+                  x.status←'removed' ⋄ x.old←Safe a⍎n ⋄ x.old_text←Short a⍎n
+              :ElseIf ~(⊂n)∊na
+                  x.status←'added' ⋄ x.new←Safe b⍎n ⋄ x.new_text←Short b⍎n
+              :ElseIf (a⍎n)Same(b⍎n)
+                  :Continue
+              :Else
+                  x.status←'changed'
+                  x.(old new)←Safe¨(a⍎n)(b⍎n)
+                  x.(old_text new_text)←Short¨(a⍎n)(b⍎n)
+                  :If lvl<3
+                  :AndIf Deeper(a⍎n)(b⍎n)
+                      x.detail←(lvl+1)Detail(a⍎n)(b⍎n)
+                  :EndIf
+              :EndIf
+              d.changes,←x
+          :EndFor
+          d.changed←≢d.changes
+      :ElseIf Comparable a b
+          m←(≢a)⌊≢b
+          (ra rb)←m↑¨a b
+          :If ∧/{(1≥|≡⍵)∧326≠⎕DR ⍵}¨ra rb
+              diff←ra≠rb
+          :Else
+              diff←~ra Same¨rb
+          :EndIf
+          i←⍸diff
+          d.how←(1+2=≢⍴a)⊃'items' 'cells'
+          d.changed←≢i
+          d.changes←⍬
+          :For n :In (MaxChanges⌊≢i)↑i
+              x←⎕NS''
+              x.at←n
+              (ia ib)←⊃¨n∘⌷¨ra rb
+              x.(old new)←Safe¨ia ib
+              x.(old_text new_text)←Short¨ia ib
+              :If lvl<3
+              :AndIf Deeper ia ib
+                  x.detail←(lvl+1)Detail ia ib
+              :EndIf
+              d.changes,←x
+          :EndFor
+          :If (≢b)>m ⋄ d.added_from←m+1 ⋄ d.added←Safe m↓b ⋄ d.added_text←Short m↓b ⋄ :EndIf
+          :If (≢a)>m ⋄ d.removed_from←m+1 ⋄ d.removed←Safe m↓a ⋄ d.removed_text←Short m↓a ⋄ :EndIf
+      :Else
+          d.how←'value'
+          d.(old new)←Safe¨a b
+      :EndIf
+    ∇
+
+    ∇ r←Comparable(a b)
+    ⍝ Both vectors, or both matrices with the same number of columns. Not text:
+    ⍝ 'open' → 'shipped' reads better than letter by letter.
+      r←0
+      Text←{(0=10|⎕DR ⍵)∧1≥|≡⍵}
+      :If (9≠⌊⎕NC'a')∧(9≠⌊⎕NC'b')∧~(Text a)∨Text b
+          r←((≢⍴a)=≢⍴b)∧((≢⍴a)∊1 2)∧(1↓⍴a)≡1↓⍴b
+      :EndIf
+    ∇
+
+    ∇ r←Deeper(a b)
+    ⍝ Worth explaining in more detail: two namespaces, or two comparable non-trivial arrays
+      r←(9=⌊⎕NC'a')∧9=⌊⎕NC'b'
+      :If (~r)∧(9≠⌊⎕NC'a')∧9≠⌊⎕NC'b'
+          r←(Comparable a b)∧(1<≢,a)∧1<≢,b
+      :EndIf
+    ∇
+
+    ∇ r←DiffFiles(old new);ta;tb;ca;cb;n;x;va;vb
+    ⍝ Compare two component files, component number by component number
+      'Both are the same file'⎕SIGNAL 11/⍨old≡new
+      ta←Tie old ⋄ tb←Tie new
+      ca←Comps ta ⋄ cb←Comps tb
+      r←⎕NS''
+      r.(old new)←old new
+      r.(same changed added removed)←0
+      r.components←⍬
+      :For n :In {⍵[⍋⍵]}ca∪cb
+          x←⎕NS'' ⋄ x.component←n
+          :If ~n∊cb
+              va←⎕FREAD ta n
+              x.status←'removed' ⋄ x.kind←Kind va ⋄ x.old←Safe va ⋄ x.old_text←Short va
+          :ElseIf ~n∊ca
+              vb←⎕FREAD tb n
+              x.status←'added' ⋄ x.kind←Kind vb ⋄ x.new←Safe vb ⋄ x.new_text←Short vb
+              x.new_meta←tb Meta n
+          :Else
+              va←⎕FREAD ta n ⋄ vb←⎕FREAD tb n
+              :If va Same vb ⋄ r.same+←1 ⋄ :Continue ⋄ :EndIf
+              x.status←'changed' ⋄ x.kind←Kind vb
+              x.detail←Detail va vb
+              x.(old_meta new_meta)←(ta Meta n)(tb Meta n)
+          :EndIf
+          r⍎x.status,'+←1'
+          r.components,←x
+      :EndFor
+      ⎕FUNTIE ta tb
+    ∇
+
+    ∇ r←DiffFolders(old new);fa;fb;f;x
+    ⍝ Compare every .dcf in two folders, matched by file name
+      'Both are the same folder'⎕SIGNAL 11/⍨old≡new
+      fa←Dcfs old ⋄ fb←Dcfs new
+      r←⎕NS''
+      r.(old new)←old new
+      r.files←⍬
+      :For f :In {⍵[⍋↑⍵]}fa∪fb
+          :If ~(⊂f)∊fb
+              x←⎕NS'' ⋄ x.(name status)←f'removed'
+          :ElseIf ~(⊂f)∊fa
+              x←⎕NS'' ⋄ x.(name status)←f'added'
+          :Else
+              x←DiffFiles(old,'/',f,'.dcf')(new,'/',f,'.dcf')
+              x.name←f
+              x.status←(1+0<+/x.(changed added removed))⊃'same' 'changed'
+          :EndIf
+          r.files,←x
+      :EndFor
+    ∇
+
+⍝ ── Text report ──────────────────────────────────────────────────────────
+
+    ∇ lines←Report r;f
+    ⍝ A diff (from DiffFiles or DiffFolders) as lines of text
+      :If 2=r.⎕NC'files'
+          lines←⍬
+          :For f :In r.files
+              :Select f.status
+              :Case 'added' ⋄ lines,←⊂'+ ',f.name,'.dcf (new file)'
+              :Case 'removed' ⋄ lines,←⊂'- ',f.name,'.dcf (file removed)'
+              :Else ⋄ lines,←(⊂f.name,'.dcf'),FileLines f
+              :EndSelect
+          :EndFor
+      :Else
+          lines←FileLines r
+      :EndIf
+    ∇
+
+    ∇ lines←FileLines r;c;head
+      lines←⍬
+      :For c :In r.components
+          head←'  #',(¯4↑⍕c.component),'  ',(8↑c.status),' ',c.kind
+          :Select c.status
+          :Case 'added' ⋄ lines,←⊂head,'  ',c.new_text
+          :Case 'removed' ⋄ lines,←⊂head,'  ',c.old_text
+          :Else ⋄ lines,←(⊂head),'       'DetailLines c.detail
+          :EndSelect
+      :EndFor
+      lines,←⊂'  ',(⍕r.same),' same, ',(⍕r.changed),' changed, ',(⍕r.added),' added, ',(⍕r.removed),' removed'
+    ∇
+
+    ∇ lines←ind DetailLines d;x;at;more
+      lines←⍬
+      :Select d.how
+      :Case 'fields'
+          :For x :In d.changes
+              :Select x.status
+              :Case 'added' ⋄ lines,←⊂ind,'+ ',x.field,': ',x.new_text
+              :Case 'removed' ⋄ lines,←⊂ind,'- ',x.field,': ',x.old_text
+              :Else
+                  :If 0≠x.⎕NC'detail'
+                      lines,←(⊂ind,x.field,':'),(ind,'  ')DetailLines x.detail
+                  :Else
+                      lines,←⊂ind,x.field,': ',x.old_text,' → ',x.new_text
+                  :EndIf
+              :EndSelect
+          :EndFor
+      :CaseList 'items' 'cells'
+          :For x :In d.changes
+              at←'[',({1=≢⍵:⍕⍵ ⋄ (⍕⍵[1]),';',⍕⍵[2]}x.at),']'
+              :If 0≠x.⎕NC'detail'
+                  lines,←(⊂ind,at),(ind,'  ')DetailLines x.detail
+              :Else
+                  lines,←⊂ind,at,' ',x.old_text,' → ',x.new_text
+              :EndIf
+          :EndFor
+          :If d.changed>≢d.changes
+              lines,←⊂ind,'… and ',(⍕d.changed-≢d.changes),' more'
+          :EndIf
+          :If 0≠d.⎕NC'added' ⋄ lines,←⊂ind,'+ from [',(⍕d.added_from),']: ',d.added_text ⋄ :EndIf
+          :If 0≠d.⎕NC'removed' ⋄ lines,←⊂ind,'- from [',(⍕d.removed_from),']: ',d.removed_text ⋄ :EndIf
+      :Else
+          lines,←⊂ind,d.old_text,' → ',d.new_text
+      :EndSelect
+    ∇
+
+    ∇ lines←List d;c;rows;w
+    ⍝ A Dump as a table of text lines
+      rows←⊂'comp' 'kind' 'shape' 'bytes' 'written' 'value'
+      :For c :In d.components
+          rows,←⊂(⍕c.component)c.kind(⍕c.shape)(⍕c.bytes)c.written(60 Clip c.text)
+      :EndFor
+      w←¯1↓⌈⌿↑≢¨¨rows                                ⍝ widths (last column not padded)
+      lines←{(∊(w↑¨¯1↓⍵),¨⊂'  '),⊃⌽⍵}¨rows
+      lines←lines{0=⍵:⍺ ⋄ ⍺,⊂'… and ',(⍕⍵),' more components'}d.more
+    ∇
+:EndNamespace

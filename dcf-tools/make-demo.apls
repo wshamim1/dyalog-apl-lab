@@ -1,0 +1,63 @@
+⍝ Make demo/before and demo/after: the sample component files, and a copy
+⍝ with typical day-to-day edits, so there's something to compare.
+⍝ Run (from the repo folder):  dyalog dcf-tools/make-demo.apls
+⍝
+⍝ Edits in after/:
+⍝   customers.dcf  header text changed; Zoë's city and credit limit changed;
+⍝                  a new customer appended
+⍝   orders.dcf     order 1003 shipped (status, a quantity, a new field);
+⍝                  order 1007 got an extra line; the last order dropped
+⍝   settings.dcf   VAT changed; one month's sales corrected; two flags flipped
+here←⊃1⎕NPARTS⊃2⎕NQ'.' 'GetCommandLineArgs'
+src←here,'../sample-scripts/component-files/data/'
+{}3 ⎕MKDIR¨here∘,¨'demo/before' 'demo/after'
+
+Fresh←{⎕NEXISTS f←⍵,'.dcf':⎕NDELETE f ⋄ 0}
+∇ to Copy name;s;d;n;first;next
+  s←(src,name)⎕FSTIE 0
+  {}Fresh to,name
+  d←(to,name)⎕FCREATE 0
+  (first next)←2↑⎕FSIZE s
+  :For n :In (first-1)+⍳next-first
+      {}(⎕FREAD s n)⎕FAPPEND d
+  :EndFor
+  ⎕FUNTIE s d
+∇
+
+:For f :In 'customers' 'orders' 'settings'
+    (here,'demo/before/')Copy f
+    (here,'demo/after/')Copy f
+:EndFor
+
+a←here,'demo/after/'
+⍝ customers ────────────────────────────────────────────────────────────
+t←(a,'customers')⎕FTIE 0
+'Customer master · version 2'⎕FREPLACE t 1
+r←⎕FREAD t 5                         ⍝ customer 3, Zoë
+r[3 4]←'Hamburg' 7500
+r ⎕FREPLACE t 5
+{}(11 'Nia' 'Nairobi' 3000 '2025-03-14')⎕FAPPEND t
+⎕FUNTIE t
+
+⍝ orders ───────────────────────────────────────────────────────────────
+t←(a,'orders')⎕FTIE 0
+o←⎕FREAD t 3                         ⍝ order 1003
+o.status←'shipped'
+o.lines[1;2]←6
+o.shipped←'2026-02-03'
+o ⎕FREPLACE t 3
+o←⎕FREAD t 7                         ⍝ order 1007
+o.lines⍪←'Gadget' 1 19.99
+o ⎕FREPLACE t 7
+⎕FDROP t ¯1                          ⍝ drop the last order
+⎕FUNTIE t
+
+⍝ settings ─────────────────────────────────────────────────────────────
+t←(a,'settings')⎕FTIE 0
+kv←⎕FREAD t 1 ⋄ kv[2;2]←0.25 ⋄ kv ⎕FREPLACE t 1
+m←⎕FREAD t 2 ⋄ m[3;12]←650 ⋄ m ⎕FREPLACE t 2
+b←⎕FREAD t 3 ⋄ b[10 11]←~b[10 11] ⋄ b ⎕FREPLACE t 3
+⎕FUNTIE t
+
+⎕←'Made ',here,'demo/before and demo/after'
+⎕←'Compare them:  python3 dcf-tools/dcf.py diff dcf-tools/demo/before dcf-tools/demo/after'

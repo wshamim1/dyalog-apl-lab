@@ -1,0 +1,60 @@
+ DCF_test;dir;t;a;b;n;o;r;d;c;x
+⍝ DCF on its own small files in /tmp: describing, comparing, diffing, JSON.
+ dir←'/tmp/dcf-test/'
+ {}3 ⎕MKDIR dir
+ {}{⎕NEXISTS ⍵:⎕NDELETE ⍵ ⋄ 0}¨dir∘,¨'a.dcf' 'b.dcf'
+
+⍝ Kind
+ 'char vector'ExpectEq DCF.Kind'hello'
+ 'numeric matrix'ExpectEq DCF.Kind 2 3⍴⍳6
+ 'boolean vector'ExpectEq DCF.Kind 1 0 1
+ 'nested vector'ExpectEq DCF.Kind'ab' 'cd'
+ 'namespace'ExpectEq DCF.Kind ⎕NS''
+
+⍝ Same: namespaces compare by content, not by reference
+ a←⎕NS'' ⋄ a.(x y)←1 'two'
+ b←⎕NS'' ⋄ b.(x y)←1 'two'
+ 1 ExpectEq a DCF.Same b
+ b.y←'TWO'
+ 0 ExpectEq a DCF.Same b
+ 1 ExpectEq(1 a)DCF.Same(1 a)                           ⍝ inside arrays too
+
+⍝ Safe: values ⎕JSON can't export become exportable
+ o←⎕NS'' ⋄ o.v←0J1 ⋄ o.f←{⍵}
+ x←DCF.JSON DCF.Safe o
+ 1 ExpectEq∨/'0J1'⍷x                                     ⍝ complex number as text
+ 1 ExpectEq∨/'apl_functions'⍷x                           ⍝ the function, by name
+
+⍝ Two files: one record changed, one namespace field changed, one appended
+ t←(dir,'a')⎕FCREATE 0
+ {}(1 'Ann' 4000)⎕FAPPEND t
+ o←⎕NS'' ⋄ o.(id status)←7 'open' ⋄ {}o ⎕FAPPEND t
+ {}⎕FUNTIE t
+ t←(dir,'b')⎕FCREATE 0
+ {}(1 'Ann' 5000)⎕FAPPEND t
+ o←⎕NS'' ⋄ o.(id status)←7 'paid' ⋄ {}o ⎕FAPPEND t
+ {}(3 3⍴⍳9)⎕FAPPEND t
+ {}⎕FUNTIE t
+
+ r←DCF.DiffFiles(dir,'a')(dir,'b')
+ 0 2 1 0 ExpectEq r.(same changed added removed)
+ c←r.components
+ 'items'ExpectEq c[1].detail.how
+ 3 ExpectEq c[1].detail.changes[1].at                     ⍝ [3] 4000 → 5000
+ 5000 ExpectEq c[1].detail.changes[1].new
+ 'fields'ExpectEq c[2].detail.how
+ 'status'ExpectEq c[2].detail.changes[1].field
+ 'paid'ExpectEq c[2].detail.changes[1].new
+ 'added'ExpectEq c[3].status
+
+⍝ The report mentions every change, and a file equals itself in content
+ x←∊DCF.Report r
+ 1 ExpectEq∨/'4000 → 5000'⍷x
+ 1 ExpectEq∨/'status: ''open'' → ''paid'''⍷x
+ 11 ExpectError'DCF.DiffFiles(dir,''a'')(dir,''a'')'        ⍝ same file: refused
+
+⍝ Dump: every component, with metadata, and valid JSON
+ d←DCF.Dump dir,'b'
+ 3 ExpectEq d.count
+ 'numeric matrix'ExpectEq d.components[3].kind
+ 1 ExpectEq 0<≢DCF.JSON d
